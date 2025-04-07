@@ -1,0 +1,36 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          
+      - name: Install Yarn
+        run: npm install -g yarn
+          
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: yarn install
+        
+      - name: Type check
+        working-directory: ./frontend
+        run: yarn typecheck
+        
+      - name: Lint
+        working-directory: ./frontend
+        run: yarn lint
+        
+      - name: Run tests
+        working-directory: ./frontend
+        run: yarn test:ci 

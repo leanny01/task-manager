@@ -1,0 +1,44 @@
+# name: Backend CI/CD
+
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'backend/**'
+#       - '.github/workflows/backend.yml'
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+      
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: '18'
+          
+#       - name: Install Yarn
+#         run: npm install -g yarn
+          
+#       - name: Install dependencies
+#         working-directory: ./backend
+#         run: yarn install
+        
+#       - name: Build TypeScript
+#         working-directory: ./backend
+#         run: yarn build
+        
+#       - name: Deploy to Droplet
+#         uses: appleboy/ssh-action@master
+#         with:
+#           host: ${{ secrets.DROPLET_HOST }}
+#           username: ${{ secrets.DROPLET_USERNAME }}
+#           key: ${{ secrets.DROPLET_SSH_KEY }}
+#           script: |
+#             cd /var/www/task-manager
+#             git pull origin main
+#             cd backend
+#             yarn install
+#             yarn build
+#             pm2 restart task-manager-api 
