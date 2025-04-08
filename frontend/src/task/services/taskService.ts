@@ -1,66 +1,95 @@
 import { Task, CreateTaskInput } from "../types/task";
+import { taskRepository } from "../repositories/taskRepository";
+import { v4 as uuidv4 } from "uuid";
 
-const STORAGE_KEY = "tasks";
-
+// Query methods
 export const taskService = {
-  getAllTasks: (): Task[] => {
-    const tasksJson = localStorage.getItem(STORAGE_KEY);
-    if (!tasksJson) return [];
-
-    const tasks = JSON.parse(tasksJson);
-    return tasks.map((task: any) => ({
-      ...task,
-      createdAt: new Date(task.createdAt),
-      updatedAt: new Date(task.updatedAt),
-    }));
+  getAll: (): Task[] => {
+    return taskRepository.getAll();
   },
 
-  addTask: (input: CreateTaskInput): Task => {
-    const tasks = taskService.getAllTasks();
+  getById: (id: string): Task | undefined => {
+    const tasks = taskRepository.getAll();
+    return tasks.find((task) => task.id === id);
+  },
+
+  getByDate: (date: Date): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => {
+      const taskDate = new Date(task.createdAt);
+      return taskDate.toDateString() === date.toDateString();
+    });
+  },
+
+  getCompleted: (): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => task.completed);
+  },
+
+  getPending: (): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => !task.completed);
+  },
+
+  // Command methods
+  create: (input: CreateTaskInput): Task => {
     const newTask: Task = {
+      id: uuidv4(),
       ...input,
-      id: crypto.randomUUID(),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...tasks, newTask]));
+    const tasks = taskRepository.getAll();
+    taskRepository.save([...tasks, newTask]);
     return newTask;
   },
 
-  updateTask: (task: Task): Task => {
-    const tasks = taskService.getAllTasks();
+  update: (id: string, updates: Partial<Task>): Task => {
+    const tasks = taskRepository.getAll();
+    const taskIndex = tasks.findIndex((task) => task.id === id);
+
+    if (taskIndex === -1) {
+      throw new Error("Task not found");
+    }
+
     const updatedTask = {
-      ...task,
+      ...tasks[taskIndex],
+      ...updates,
       updatedAt: new Date(),
     };
 
-    const updatedTasks = tasks.map((t) => (t.id === task.id ? updatedTask : t));
+    const newTasks = [...tasks];
+    newTasks[taskIndex] = updatedTask;
+    taskRepository.save(newTasks);
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTasks));
     return updatedTask;
   },
 
-  deleteTask: (id: string): void => {
-    const tasks = taskService.getAllTasks();
+  delete: (id: string): void => {
+    const tasks = taskRepository.getAll();
     const filteredTasks = tasks.filter((task) => task.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filteredTasks));
+    taskRepository.save(filteredTasks);
   },
 
-  toggleTaskCompletion: (id: string): Task => {
-    const tasks = taskService.getAllTasks();
+  markComplete: (id: string): Task => {
+    return taskService.update(id, { completed: true });
+  },
+
+  markIncomplete: (id: string): Task => {
+    return taskService.update(id, { completed: false });
+  },
+
+  toggleComplete: (id: string): Task => {
+    const tasks = taskRepository.getAll();
     const task = tasks.find((t) => t.id === id);
-    if (!task) throw new Error("Task not found");
 
-    const updatedTask = {
-      ...task,
-      completed: !task.completed,
-      updatedAt: new Date(),
-    };
+    if (!task) {
+      throw new Error("Task not found");
+    }
 
-    const updatedTasks = tasks.map((t) => (t.id === id ? updatedTask : t));
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTasks));
-    return updatedTask;
+    return task.completed
+      ? taskService.markIncomplete(id)
+      : taskService.markComplete(id);
   },
 };

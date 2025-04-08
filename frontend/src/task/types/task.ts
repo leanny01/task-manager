@@ -1,18 +1,18 @@
 export enum TaskPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
 }
 
-export type Task = {
-  id: string;
+export interface CreateTaskInput {
   title: string;
-  description: string;
-  completed: boolean;
+  description?: string;
   priority: TaskPriority;
-  dueDate?: Date;
+  completed?: boolean;
+}
+
+export interface Task extends CreateTaskInput {
+  id: string;
   createdAt: Date;
   updatedAt: Date;
-};
-
-export type CreateTaskInput = Omit<Task, "id" | "createdAt" | "updatedAt">;
+}

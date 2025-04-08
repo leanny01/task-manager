@@ -11,7 +11,7 @@ export const useCreateTask = () => {
     setError(null);
 
     try {
-      const newTask = taskService.addTask(input);
+      const newTask = taskService.create(input);
       return newTask;
     } catch (err) {
       setError("Failed to create task");

@@ -7,7 +7,7 @@ import EditTaskModal from '../task/edit/EditTaskModal';
 import { useCreateTask } from '../task/create/useCreateTask';
 import { useEditTask } from '../task/edit/useEditTask';
 import { useListTasks } from '../task/list/useListTasks';
-import { taskService } from '../task/services/task';
+import { taskService } from '../task/services/taskService';
 
 const Container = styled.div`
   min-height: 100vh;

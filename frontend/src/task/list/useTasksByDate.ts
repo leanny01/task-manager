@@ -2,25 +2,33 @@ import { useState, useEffect } from "react";
 import { Task } from "../types/task";
 import { taskService } from "../services/taskService";
 
-export const useFetchTasks = () => {
+export const useTasksByDate = (date: Date) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadTasks = async () => {
     try {
-      const loadedTasks = taskService.getAll(); // TODO: add loading indicator
+      setIsLoading(true);
+      setError(null);
+      const loadedTasks = taskService.getByDate(date);
       setTasks(loadedTasks);
     } catch (err) {
       setError("Failed to load tasks");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, [date]);
 
   return {
     tasks,
     isLoading,
     error,
+    loadTasks,
   };
 };

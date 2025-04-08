@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Task } from "../types/task";
-import { taskService } from "../services/task";
+import { taskService } from "../services/taskService";
 
 export const useEditTask = () => {
   const [isLoading, setIsLoading] = useState(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Task } from "../types/task";
-import { taskService } from "../services/task";
+import { taskService } from "../services/taskService";
 
 export const useListTasks = () => {
   const [tasks, setTasks] = useState<Task[]>([]);

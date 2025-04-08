@@ -76,7 +76,7 @@ export default function TaskList({ tasks, onToggleComplete, onDeleteTask, onEdit
             onChange={() => onToggleComplete(task.id)}
           />
           <TaskContent>
-            <TaskTitle completed={task.completed}>{task.title}</TaskTitle>
+            <TaskTitle completed={task.completed ?? false}>{task.title}</TaskTitle>
             {task.description && (
               <TaskDescription>{task.description}</TaskDescription>
             )}

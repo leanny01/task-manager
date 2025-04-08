@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Task, TaskPriority } from '../types/task';
-import { Input } from '../../shared/components/forms/Input';
-import { TextArea } from '../../shared/components/forms/TextArea';
-import { Button } from '../../shared/components/buttons/Button';
+import { Input } from '../shared/components/forms/Input';
+import { TextArea } from '../shared/components/forms/TextArea';
+import { Button } from '../shared/components/buttons/Button';
 
 interface EditTaskModalProps {
   task: Task;
@@ -86,7 +86,7 @@ export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalPr
     try {
       await onSave(task.id, {
         title: title.trim(),
-        description: description.trim(),
+        description: description?.trim(),
         priority: priority,
       });
       onClose();

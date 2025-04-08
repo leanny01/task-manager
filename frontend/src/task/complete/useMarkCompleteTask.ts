@@ -1,20 +1,18 @@
 import { useState } from "react";
-import { Task } from "../types/task";
 import { taskService } from "../services/taskService";
 
-export const useCompleteTask = () => {
+export const useMarkCompleteTask = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const completeTask = async (id: string): Promise<Task> => {
-    setIsLoading(true);
-    setError(null);
-
+  const markComplete = async (id: string) => {
     try {
-      const updatedTask = taskService.toggleTaskCompletion(id);
-      return updatedTask;
+      setIsLoading(true);
+      setError(null);
+      return taskService.markComplete(id);
     } catch (err) {
-      setError("Failed to complete task");
+      setError("Failed to mark task as complete");
+      console.error(err);
       throw err;
     } finally {
       setIsLoading(false);
@@ -22,7 +20,7 @@ export const useCompleteTask = () => {
   };
 
   return {
-    completeTask,
+    markComplete,
     isLoading,
     error,
   };
