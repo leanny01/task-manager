@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useTasks } from '../slices/task/hooks/useTasks';
-import TaskList from '../slices/task/components/TaskList';
-import AddTaskForm from '../slices/task/components/AddTaskForm';
-import EditTaskModal from '../slices/task/components/EditTaskModal';
-import { Task } from '../slices/task/types/task';
+import { Task, CreateTaskInput } from '../domains/task/types/task';
+import TaskList from '../domains/task/list/TaskList';
+import AddTaskForm from '../domains/task/create/AddTaskForm';
+import EditTaskModal from '../domains/task/edit/EditTaskModal';
+import { useCreateTask } from '../domains/task/create/useCreateTask';
+import { useEditTask } from '../domains/task/edit/useEditTask';
+import { useListTasks } from '../domains/task/list/useListTasks';
+import { taskService } from '../domains/task/services/task';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -74,30 +77,41 @@ const TaskCount = styled.h2`
 `;
 
 export default function Home() {
-  const {
-    tasks,
-    isLoading,
-    error,
-    addTask,
-    toggleTaskCompletion,
-    deleteTask,
-    updateTask
-  } = useTasks();
+  const { tasks, isLoading: isLoadingList, error: listError, loadTasks } = useListTasks();
+  const { createTask, isLoading: isCreating, error: createError } = useCreateTask();
+  const { editTask, isLoading: isEditing, error: editError } = useEditTask();
 
-  // State for the task being edited
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Handle opening the edit modal
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
   };
 
-  // Handle closing the edit modal
   const handleCloseModal = () => {
     setEditingTask(null);
   };
 
-  // Calculate task statistics
+  const handleAddTask = async (task: CreateTaskInput): Promise<Task> => {
+    const newTask = await createTask(task);
+    await loadTasks();
+    return newTask;
+  };
+
+  const handleUpdateTask = async (id: string, task: Partial<Task>): Promise<Task> => {
+    const updatedTask = await editTask(id, task);
+    await loadTasks();
+    return updatedTask;
+  };
+
+  const handleDeleteTask = async (id: string): Promise<void> => {
+    await taskService.delete(id);
+    await loadTasks();
+  };
+
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(task => task.completed).length;
 
@@ -127,29 +141,33 @@ export default function Home() {
               ) : (
                 <TaskList
                   tasks={tasks}
-                  onToggleComplete={toggleTaskCompletion}
-                  onDeleteTask={deleteTask}
                   onEditTask={handleEditTask}
+                  onToggleComplete={async (id) => {
+                    const task = tasks.find(t => t.id === id);
+                    if (task) {
+                      await handleUpdateTask(id, { completed: !task.completed });
+                    }
+                  }}
+                  onDeleteTask={handleDeleteTask}
                 />
               )}
             </TaskListWrapper>
           </div>
 
           <div>
-            <AddTaskForm onSubmit={addTask} isLoading={isLoading} />
-            {error && (
-              <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>
+            <AddTaskForm onSubmit={handleAddTask} isLoading={isCreating} />
+            {(createError || listError) && (
+              <p style={{ color: 'red', marginTop: '1rem' }}>{createError || listError}</p>
             )}
           </div>
         </TaskSection>
       </Content>
 
-      {/* Edit Task Modal */}
       {editingTask && (
         <EditTaskModal
           task={editingTask}
           onClose={handleCloseModal}
-          onSave={updateTask}
+          onSave={handleUpdateTask}
         />
       )}
     </Container>

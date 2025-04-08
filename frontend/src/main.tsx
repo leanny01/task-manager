@@ -9,6 +9,7 @@ const theme = {
         primary: '#2563eb',
         primaryHover: '#1d4ed8',
         secondary: '#eef2ff',
+        border: '#e5e7eb',
         text: {
             primary: '#111827',
             secondary: '#4b5563',
@@ -16,7 +17,9 @@ const theme = {
         }
     },
     breakpoints: {
-        md: '768px'
+        sm: '640px',
+        md: '768px',
+        lg: '1024px'
     }
 }
 

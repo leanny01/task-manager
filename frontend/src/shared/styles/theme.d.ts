@@ -13,10 +13,5 @@ declare module "styled-components" {
       };
       border: string;
     };
-    breakpoints: {
-      sm: string;
-      md: string;
-      lg: string;
-    };
   }
 }
