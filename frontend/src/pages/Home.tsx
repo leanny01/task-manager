@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Task, CreateTaskInput } from '../task/types/task';
+import { Task, CreateTaskInput, TaskStatus } from '../task/types/task';
 import TaskList from '../task/list/TaskList';
 import AddTaskForm from '../task/create/AddTaskForm';
 import EditTaskModal from '../task/edit/EditTaskModal';
 import { useCreateTask } from '../task/create/useCreateTask';
 import { useEditTask } from '../task/edit/useEditTask';
 import { useListTasks } from '../task/list/useListTasks';
+import { useMarkCompleteTask } from '../task/complete/useMarkCompleteTask';
 import { taskService } from '../task/services/taskService';
 
 const Container = styled.div`
@@ -80,6 +81,7 @@ export default function Home() {
   const { tasks, isLoading: isLoadingList, error: listError, loadTasks } = useListTasks();
   const { createTask, isLoading: isCreating, error: createError } = useCreateTask();
   const { editTask, isLoading: isEditing, error: editError } = useEditTask();
+  const { markComplete, isLoading: isCompleting, error: completeError } = useMarkCompleteTask();
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -101,8 +103,8 @@ export default function Home() {
     return newTask;
   };
 
-  const handleUpdateTask = async (id: string, task: Partial<Task>): Promise<Task> => {
-    const updatedTask = await editTask(id, task);
+  const handleUpdateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
+    const updatedTask = await editTask(id, updates);
     await loadTasks();
     return updatedTask;
   };
@@ -112,8 +114,24 @@ export default function Home() {
     await loadTasks();
   };
 
+  const handleToggleComplete = async (id: string): Promise<void> => {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+      if (task.status === TaskStatus.COMPLETED) {
+        await handleUpdateTask(id, { status: TaskStatus.PENDING });
+      } else {
+        await markComplete(id);
+      }
+      await loadTasks();
+    }
+  };
+
+  const handleArchiveTask = async (id: string): Promise<void> => {
+    await handleUpdateTask(id, { status: TaskStatus.ARCHIVED });
+  };
+
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(task => task.completed).length;
+  const completedTasks = tasks.filter(task => task.status === TaskStatus.COMPLETED).length;
 
   return (
     <Container>
@@ -142,13 +160,9 @@ export default function Home() {
                 <TaskList
                   tasks={tasks}
                   onEditTask={handleEditTask}
-                  onToggleComplete={async (id) => {
-                    const task = tasks.find(t => t.id === id);
-                    if (task) {
-                      await handleUpdateTask(id, { completed: !task.completed });
-                    }
-                  }}
+                  onToggleComplete={handleToggleComplete}
                   onDeleteTask={handleDeleteTask}
+                  onArchiveTask={handleArchiveTask}
                 />
               )}
             </TaskListWrapper>
@@ -156,8 +170,8 @@ export default function Home() {
 
           <div>
             <AddTaskForm onSubmit={handleAddTask} isLoading={isCreating} />
-            {(createError || listError) && (
-              <p style={{ color: 'red', marginTop: '1rem' }}>{createError || listError}</p>
+            {(createError || listError || completeError) && (
+              <p style={{ color: 'red', marginTop: '1rem' }}>{createError || listError || completeError}</p>
             )}
           </div>
         </TaskSection>

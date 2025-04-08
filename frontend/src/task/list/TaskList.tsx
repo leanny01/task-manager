@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Task } from '../types/task';
+import { Task, TaskStatus } from '../types/task';
 
 const List = styled.ul`
   list-style: none;
@@ -27,18 +27,24 @@ const TaskContent = styled.div`
   flex: 1;
 `;
 
-const TaskTitle = styled.h3<{ completed: boolean }>`
+const TaskTitle = styled.h3<{ status: TaskStatus }>`
   margin: 0;
   font-size: 1rem;
   color: ${props => props.theme.colors.text.primary};
-  text-decoration: ${props => props.completed ? 'line-through' : 'none'};
-  opacity: ${props => props.completed ? 0.7 : 1};
+  text-decoration: ${props => props.status === TaskStatus.COMPLETED ? 'line-through' : 'none'};
+  opacity: ${props => props.status === TaskStatus.COMPLETED ? 0.7 : 1};
 `;
 
 const TaskDescription = styled.p`
   margin: 0.25rem 0 0;
   font-size: 0.875rem;
   color: ${props => props.theme.colors.text.secondary};
+`;
+
+const TaskMeta = styled.div`
+  font-size: 0.75rem;
+  color: ${props => props.theme.colors.text.light};
+  margin-top: 0.25rem;
 `;
 
 const Actions = styled.div`
@@ -63,27 +69,46 @@ interface TaskListProps {
   onToggleComplete: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onEditTask: (task: Task) => void;
+  onArchiveTask?: (id: string) => void;
 }
 
-export default function TaskList({ tasks, onToggleComplete, onDeleteTask, onEditTask }: TaskListProps) {
+export default function TaskList({
+  tasks,
+  onToggleComplete,
+  onDeleteTask,
+  onEditTask,
+  onArchiveTask
+}: TaskListProps) {
   return (
     <List>
       {tasks.map(task => (
         <ListItem key={task.id}>
           <Checkbox
             type="checkbox"
-            checked={task.completed}
+            checked={task.status === TaskStatus.COMPLETED}
             onChange={() => onToggleComplete(task.id)}
+            disabled={task.status === TaskStatus.ARCHIVED}
           />
           <TaskContent>
-            <TaskTitle completed={task.completed ?? false}>{task.title}</TaskTitle>
+            <TaskTitle status={task.status}>{task.title}</TaskTitle>
             {task.description && (
               <TaskDescription>{task.description}</TaskDescription>
             )}
+            <TaskMeta>
+              {task.dueDate && `Due: ${new Date(task.dueDate).toLocaleDateString()}`}
+              {task.completedAt && `Completed: ${new Date(task.completedAt).toLocaleDateString()}`}
+            </TaskMeta>
           </TaskContent>
           <Actions>
-            <Button onClick={() => onEditTask(task)}>Edit</Button>
-            <Button onClick={() => onDeleteTask(task.id)}>Delete</Button>
+            {task.status !== TaskStatus.ARCHIVED && (
+              <>
+                <Button onClick={() => onEditTask(task)}>Edit</Button>
+                <Button onClick={() => onDeleteTask(task.id)}>Delete</Button>
+                {onArchiveTask && (
+                  <Button onClick={() => onArchiveTask(task.id)}>Archive</Button>
+                )}
+              </>
+            )}
           </Actions>
         </ListItem>
       ))}

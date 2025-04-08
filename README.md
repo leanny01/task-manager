@@ -1,49 +1,58 @@
 # Task Manager
 
-A full-stack task management system built with React, Node.js, MongoDB, and REST API.
+A task management application built with React and TypeScript, using local storage for data persistence.
 
-## Project Structure
+## Problem it Solves
 
-```
-/TASK-MANAGER
-│
-├── /frontend             # React app (Netlify)
-│   ├── public/
-│   ├── src/
-│   ├── .env
-│   └── package.json
-│
-├── /backend              # Node.js API (Droplet)
-│   ├── src/
-│   ├── .env
-│   ├── package.json
-│   └── pm2.config.js
-│
-├── .github/
-│   └── workflows/
-│       ├── frontend.yml  # Netlify CI/CD
-│       └── backend.yml   # GitHub Actions to deploy to Droplet
-│
-├── README.md
-└── .gitignore
-```
+Task Manager addresses the need for a simple, efficient, and user-friendly way to manage daily tasks. It provides:
+
+- Centralized task organization
+- Priority-based task management
+- Task status tracking
+- Local data persistence
+- Clean and intuitive user interface
+
+## Architecture Overview
+
+The application follows a modern, component-based architecture:
+
+### Frontend Architecture
+
+- **Component-Based Structure**: Organized into shared, domain-specific, and page components
+- **State Management**: Custom hooks for task management and local storage
+- **Service Layer**: Abstracted data operations through service classes
+- **Type Safety**: Full TypeScript implementation for better code quality
+- **Data Persistence**: Local storage for task data
 
 ## Tech Stack
 
 ### Frontend
 
 - React 18
+- TypeScript
+- Styled Components
 - React Router
-- Axios
-- Environment Variables
+- Local Storage API
 
-### Backend
+## Project Structure
 
-- Node.js
-- Express
-- MongoDB
-- JWT Authentication
-- PM2 Process Manager
+```
+/TASK-MANAGER
+│
+├── /frontend             # React app
+│   ├── public/
+│   ├── src/
+│   │   ├── domains/     # Domain-specific components and logic
+│   │   │   └── task/    # Task-related components and hooks
+│   │   ├── shared/      # Reusable components and utilities
+│   │   ├── services/    # Data access and business logic
+│   │   └── pages/       # Page components
+│   ├── .env
+│   └── package.json
+│
+├── README.md
+└── .gitignore
+```
 
 ## Getting Started
 
@@ -51,58 +60,40 @@ A full-stack task management system built with React, Node.js, MongoDB, and REST
 
 - Node.js (v18 or higher)
 - npm or yarn
-- MongoDB
 - Git
 
-### Frontend Setup
+### Setup
 
-1. Navigate to the frontend directory:
+1. Clone the repository:
+
+   ```bash
+   git clone [repository-url]
+   ```
+
+2. Navigate to the project directory:
+
    ```bash
    cd frontend
    ```
-2. Install dependencies:
+
+3. Install dependencies:
+
    ```bash
-   npm install
+   yarn install
    ```
-3. Create a `.env` file with the following variables:
-   ```
-   REACT_APP_API_URL=http://localhost:5000
-   ```
+
 4. Start the development server:
    ```bash
-   npm start
+   yarn dev
    ```
 
-### Backend Setup
+## Features
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Create a `.env` file with the following variables:
-   ```
-   PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/task-manager
-   JWT_SECRET=your_jwt_secret
-   ```
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-## Deployment
-
-### Frontend (Netlify)
-
-The frontend is automatically deployed to Netlify through GitHub Actions when changes are pushed to the main branch.
-
-### Backend (DigitalOcean Droplet)
-
-The backend is automatically deployed to a DigitalOcean Droplet through GitHub Actions when changes are pushed to the main branch.
+- Create, read, update, and delete tasks
+- Set task priorities (Low, Medium, High)
+- Mark tasks as complete/incomplete
+- Persistent storage using browser's local storage
+- Responsive design for all screen sizes
 
 ## Contributing
 

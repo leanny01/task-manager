@@ -1,4 +1,4 @@
-import { Task, CreateTaskInput } from "../types/task";
+import { Task, CreateTaskInput, TaskStatus } from "../types/task";
 import { taskRepository } from "../repositories/taskRepository";
 import { v4 as uuidv4 } from "uuid";
 
@@ -13,6 +13,11 @@ export const taskService = {
     return tasks.find((task) => task.id === id);
   },
 
+  getByStatus: (status: TaskStatus): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => task.status === status);
+  },
+
   getByDate: (date: Date): Task[] => {
     const tasks = taskRepository.getAll();
     return tasks.filter((task) => {
@@ -23,12 +28,12 @@ export const taskService = {
 
   getCompleted: (): Task[] => {
     const tasks = taskRepository.getAll();
-    return tasks.filter((task) => task.completed);
+    return tasks.filter((task) => task.status === TaskStatus.COMPLETED);
   },
 
   getPending: (): Task[] => {
     const tasks = taskRepository.getAll();
-    return tasks.filter((task) => !task.completed);
+    return tasks.filter((task) => task.status === TaskStatus.PENDING);
   },
 
   // Command methods
@@ -36,8 +41,10 @@ export const taskService = {
     const newTask: Task = {
       id: uuidv4(),
       ...input,
+      status: input.status || TaskStatus.PENDING,
       createdAt: new Date(),
       updatedAt: new Date(),
+      version: 1,
     };
 
     const tasks = taskRepository.getAll();
@@ -53,10 +60,20 @@ export const taskService = {
       throw new Error("Task not found");
     }
 
+    const currentTask = tasks[taskIndex];
     const updatedTask = {
-      ...tasks[taskIndex],
+      ...currentTask,
       ...updates,
       updatedAt: new Date(),
+      version: currentTask.version + 1,
+      completedAt:
+        updates.status === TaskStatus.COMPLETED
+          ? new Date()
+          : currentTask.completedAt,
+      archivedAt:
+        updates.status === TaskStatus.ARCHIVED
+          ? new Date()
+          : currentTask.archivedAt,
     };
 
     const newTasks = [...tasks];
@@ -73,11 +90,24 @@ export const taskService = {
   },
 
   markComplete: (id: string): Task => {
-    return taskService.update(id, { completed: true });
+    return taskService.update(id, {
+      status: TaskStatus.COMPLETED,
+      completedAt: new Date(),
+    });
   },
 
   markIncomplete: (id: string): Task => {
-    return taskService.update(id, { completed: false });
+    return taskService.update(id, {
+      status: TaskStatus.PENDING,
+      completedAt: undefined,
+    });
+  },
+
+  archive: (id: string): Task => {
+    return taskService.update(id, {
+      status: TaskStatus.ARCHIVED,
+      archivedAt: new Date(),
+    });
   },
 
   toggleComplete: (id: string): Task => {
@@ -88,7 +118,7 @@ export const taskService = {
       throw new Error("Task not found");
     }
 
-    return task.completed
+    return task.status === TaskStatus.COMPLETED
       ? taskService.markIncomplete(id)
       : taskService.markComplete(id);
   },
