@@ -1,4 +1,4 @@
-import { Task, CreateTaskInput, TaskPriority } from "../types/task";
+import { Task, CreateTaskInput } from "../types/task";
 
 // Storage key for localStorage
 const STORAGE_KEY = "data.tasks";

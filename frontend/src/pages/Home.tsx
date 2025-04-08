@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useTasks } from '../hooks/useTasks';
-import TaskList from '../components/TaskList';
-import AddTaskForm from '../components/AddTaskForm';
-import EditTaskModal from '../components/EditTaskModal';
-import { Task } from '../types/task';
+import { useTasks } from '../slices/task/hooks/useTasks';
+import TaskList from '../slices/task/components/TaskList';
+import AddTaskForm from '../slices/task/components/AddTaskForm';
+import EditTaskModal from '../slices/task/components/EditTaskModal';
+import { Task } from '../slices/task/types/task';
 
 const Container = styled.div`
   min-height: 100vh;
