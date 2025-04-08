@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Task, CreateTaskInput } from '../domains/task/types/task';
-import TaskList from '../domains/task/list/TaskList';
-import AddTaskForm from '../domains/task/create/AddTaskForm';
-import EditTaskModal from '../domains/task/edit/EditTaskModal';
-import { useCreateTask } from '../domains/task/create/useCreateTask';
-import { useEditTask } from '../domains/task/edit/useEditTask';
-import { useListTasks } from '../domains/task/list/useListTasks';
-import { taskService } from '../domains/task/services/task';
+import { Task, CreateTaskInput } from '../task/types/task';
+import TaskList from '../task/list/TaskList';
+import AddTaskForm from '../task/create/AddTaskForm';
+import EditTaskModal from '../task/edit/EditTaskModal';
+import { useCreateTask } from '../task/create/useCreateTask';
+import { useEditTask } from '../task/edit/useEditTask';
+import { useListTasks } from '../task/list/useListTasks';
+import { taskService } from '../task/services/task';
 
 const Container = styled.div`
   min-height: 100vh;
