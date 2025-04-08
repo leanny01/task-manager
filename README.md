@@ -12,97 +12,89 @@ Task Manager addresses the need for a simple, efficient, and user-friendly way t
 - Local data persistence
 - Clean and intuitive user interface
 
-## Architecture Overview
+## 🚀 Live Demo
 
-The application follows a modern, component-based architecture:
+Check out the live demo at [https://nova-task-manager.netlify.app/](https://nova-task-manager.netlify.app/)
 
-### Frontend Architecture
+## ✨ Features
 
-- **Component-Based Structure**: Organized into shared, domain-specific, and page components
-- **State Management**: Custom hooks for task management and local storage
-- **Service Layer**: Abstracted data operations through service classes
-- **Type Safety**: Full TypeScript implementation for better code quality
-- **Data Persistence**: Local storage for task data
+- **Task Management**
 
-## Tech Stack
+  - Add new tasks with title and description
+  - Delete tasks
+  - Mark tasks as complete/incomplete
+  - View task details and status
+  - Archive completed tasks
 
-### Frontend
+- **User Experience**
+  - Clean and intuitive interface
+  - Responsive design for all devices
+  - Offline support with local storage
+  - Real-time task status updates
+  - Error handling and loading states
 
-- React 18
-- TypeScript
-- Styled Components
-- React Router
-- Local Storage API
+## 🛠️ Tech Stack
 
-## Project Structure
+- **Frontend**
 
-```
-/TASK-MANAGER
-│
-├── /frontend             # React app
-│   ├── public/
-│   ├── src/
-│   │   ├── domains/     # Domain-specific components and logic
-│   │   │   └── task/    # Task-related components and hooks
-│   │   ├── shared/      # Reusable components and utilities
-│   │   ├── services/    # Data access and business logic
-│   │   └── pages/       # Page components
-│   ├── .env
-│   └── package.json
-│
-├── README.md
-└── .gitignore
-```
+  - React 18
+  - TypeScript
+  - Styled Components
+  - React Router
+  - Context API for state management
 
-## Getting Started
+- **Development Tools**
+  - Vite
+  - ESLint
+  - Prettier
+  - TypeScript
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v16 or higher)
 - npm or yarn
-- Git
 
-### Setup
+### Installation
 
 1. Clone the repository:
 
-   ```bash
-   git clone [repository-url]
-   ```
+```bash
+git clone https://github.com/yourusername/task-manager.git
+cd task-manager
+```
 
-2. Navigate to the project directory:
+2. Install dependencies:
 
-   ```bash
-   cd frontend
-   ```
+```bash
+npm install
+# or
+yarn install
+```
 
-3. Install dependencies:
+3. Start the development server:
 
-   ```bash
-   yarn install
-   ```
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-4. Start the development server:
-   ```bash
-   yarn dev
-   ```
+4. Open your browser and navigate to `http://localhost:5173`
 
-## Features
+### Building for Production
 
-- Create, read, update, and delete tasks
-- Set task priorities (Low, Medium, High)
-- Mark tasks as complete/incomplete
-- Persistent storage using browser's local storage
-- Responsive design for all screen sizes
+To create a production build:
 
-## Contributing
+```bash
+npm run build
+# or
+yarn build
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+The build artifacts will be stored in the `dist/` directory.
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
