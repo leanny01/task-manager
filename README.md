@@ -1,6 +1,6 @@
 # Task Manager
 
-A task management application built with React and TypeScript, using local storage for data persistence.
+A modern task management application built with React and TypeScript, featuring offline support and a clean, intuitive interface.
 
 ## Problem it Solves
 
@@ -32,6 +32,42 @@ Check out the live demo at [https://nova-task-manager.netlify.app/](https://nova
   - Offline support with local storage
   - Real-time task status updates
   - Error handling and loading states
+
+## 🏗️ Architecture
+
+The application follows a layered architecture pattern designed for scalability and maintainability.
+
+### System Architecture Diagram
+
+![Task Manager Architecture](docs/images/architecture.png)
+
+The architecture is divided into three main levels:
+
+1. **Context Level**
+
+   - High-level system overview
+   - User interaction with Task Manager system
+
+2. **Application Flow Level**
+
+   - Single-page web application
+   - API communication
+   - Database interactions
+
+3. **Detailed Implementation Level**
+   - Error handling middleware
+   - Authentication & Authorization
+   - Task management components
+   - Data persistence layer
+   - Testing strategy
+
+Key architectural features:
+
+- Clean separation of concerns
+- Error handling at every layer
+- Built-in monitoring and logging
+- Comprehensive testing approach
+- Scalable data access patterns
 
 ## 🛠️ Tech Stack
 
