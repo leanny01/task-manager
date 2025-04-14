@@ -35,31 +35,12 @@ Check out the live demo at [https://nova-task-manager.netlify.app/](https://nova
 
 ## 🏗️ Architecture
 
-The application follows a layered architecture pattern designed for scalability and maintainability.
+The application follows a modern, scalable architecture split between frontend and backend services.
 
-### System Architecture Diagram
+### Detailed Architecture Documentation
 
-![Task Manager Architecture](docs/images/architecture.png)
-
-The architecture is divided into three main levels:
-
-1. **Context Level**
-
-   - High-level system overview
-   - User interaction with Task Manager system
-
-2. **Application Flow Level**
-
-   - Single-page web application
-   - API communication
-   - Database interactions
-
-3. **Detailed Implementation Level**
-   - Error handling middleware
-   - Authentication & Authorization
-   - Task management components
-   - Data persistence layer
-   - Testing strategy
+- [Frontend Architecture](frontend/README.md) - React-based SPA with modern state management
+- [Backend Architecture](backend/README.md) - Node.js API with MongoDB integration
 
 Key architectural features:
 
@@ -79,17 +60,26 @@ Key architectural features:
   - React Router
   - Context API for state management
 
+- **Backend**
+
+  - Node.js
+  - Express
+  - MongoDB
+  - TypeScript
+  - JWT Authentication
+
 - **Development Tools**
   - Vite
   - ESLint
   - Prettier
-  - TypeScript
+  - Jest & React Testing Library
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js (v16 or higher)
+- MongoDB
 - yarn
 
 ### Installation
@@ -104,12 +94,24 @@ cd task-manager
 2. Install dependencies:
 
 ```bash
+# Install frontend dependencies
+cd frontend
+yarn install
+
+# Install backend dependencies
+cd ../backend
 yarn install
 ```
 
-3. Start the development server:
+3. Start the development servers:
 
 ```bash
+# Start backend server
+cd backend
+yarn dev
+
+# Start frontend server (in a new terminal)
+cd frontend
 yarn dev
 ```
 
@@ -120,10 +122,14 @@ yarn dev
 To create a production build:
 
 ```bash
+# Build frontend
+cd frontend
+yarn build
+
+# Build backend
+cd ../backend
 yarn build
 ```
-
-The build artifacts will be stored in the `dist/` directory.
 
 ## 📝 License
 
