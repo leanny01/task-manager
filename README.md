@@ -90,7 +90,7 @@ Key architectural features:
 ### Prerequisites
 
 - Node.js (v16 or higher)
-- npm or yarn
+- yarn
 
 ### Installation
 
@@ -104,16 +104,12 @@ cd task-manager
 2. Install dependencies:
 
 ```bash
-npm install
-# or
 yarn install
 ```
 
 3. Start the development server:
 
 ```bash
-npm run dev
-# or
 yarn dev
 ```
 
@@ -124,8 +120,6 @@ yarn dev
 To create a production build:
 
 ```bash
-npm run build
-# or
 yarn build
 ```
 
