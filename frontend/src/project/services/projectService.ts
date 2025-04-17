@@ -190,7 +190,7 @@ export class ProjectService {
         title: task.title,
         description: task.description,
         priority: this.mapTaskPriorityToProjectPriority(task.priority),
-        dueDate: task.dueDate,
+        dueDate: task.toDate,
       });
 
       // Add the task to the project

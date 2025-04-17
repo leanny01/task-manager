@@ -6,6 +6,20 @@ import { Task, TaskStatus, CreateTaskInput, TaskPriority } from '../../task/type
 import { projectService } from '../services/projectService';
 import { taskService } from '../../task/services/taskService';
 import { toast } from 'react-toastify';
+import ListItem, {
+  ListItemContent,
+  ListItemHeader,
+  ListItemTitle,
+  ListItemDescription,
+  ListItemMeta,
+  ListItemBadge,
+  ListItemActions,
+  ListItemAction
+} from '../../shared/components/ListItem';
+import EditTaskModal from '../../task/edit/EditTaskModal';
+import { useEditTask } from '../../task/edit/useEditTask';
+import { useDeleteTask } from '../../task/delete/useDeleteTask';
+import TaskList from '../../task/list/TaskList';
 
 const Container = styled.div`
   padding: 2rem;
@@ -26,10 +40,10 @@ const BackButton = styled.button`
   cursor: pointer;
   padding: 0.5rem;
   margin-right: 1rem;
-  color: #4b5563;
+  color: ${props => props.theme.colors.text.secondary};
   
   &:hover {
-    color: #111827;
+    color: ${props => props.theme.colors.text.primary};
   }
 `;
 
@@ -41,20 +55,51 @@ const Title = styled.h1`
   margin: 0;
   font-size: 1.875rem;
   font-weight: 600;
-  color: #111827;
+  color: ${props => props.theme.colors.text.primary};
 `;
 
 const Description = styled.p`
   margin: 0.5rem 0 0;
-  color: #6b7280;
+  color: ${props => props.theme.colors.text.light};
   font-size: 1rem;
+  white-space: pre-wrap;
+`;
+
+const DescriptionInput = styled.textarea`
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  color: ${props => props.theme.colors.text.primary};
+  margin: 0.5rem 0;
+  min-height: 100px;
+  resize: vertical;
+  
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const EditButton = styled.button`
+  background: none;
+  border: none;
+  color: ${props => props.theme.colors.text.light};
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+  
+  &:hover {
+    color: ${props => props.theme.colors.text.primary};
+  }
 `;
 
 const Meta = styled.div`
   margin-top: 1rem;
   display: flex;
   gap: 2rem;
-  color: #6b7280;
+  color: ${props => props.theme.colors.text.light};
   font-size: 0.875rem;
 `;
 
@@ -72,319 +117,359 @@ const SectionHeader = styled.div`
 const SectionTitle = styled.h2`
   font-size: 1.25rem;
   font-weight: 600;
-  color: #111827;
+  color: ${props => props.theme.colors.text.primary};
   margin: 0;
 `;
 
 const AddButton = styled.button`
   padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #1d4ed8;
-  }
-`;
-
-const TaskList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-const TaskItem = styled.li`
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
-  background: white;
-`;
-
-const TaskHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-`;
-
-const TaskTitle = styled.h3<{ $completed: boolean }>`
-  margin: 0;
-  font-size: 1rem;
-  color: ${props => props.$completed ? '#9ca3af' : '#111827'};
-  text-decoration: ${props => props.$completed ? 'line-through' : 'none'};
-  flex: 1;
-`;
-
-const TaskActions = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`;
-
-const ActionButton = styled.button`
-  padding: 0.25rem 0.5rem;
-  background: none;
-  border: none;
-  font-size: 0.875rem;
-  color: #6b7280;
-  cursor: pointer;
-  
-  &:hover {
-    color: #111827;
-  }
-`;
-
-const TaskDetails = styled.div`
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-`;
-
-const TaskDuration = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.75rem;
-  color: #6b7280;
-`;
-
-const AddTaskForm = styled.form`
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: white;
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 0.5rem;
-  display: flex;
-  gap: 1rem;
-`;
-
-const TaskInput = styled.input`
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  
-  &:focus {
-    outline: none;
-    border-color: ${props => props.theme.colors.primary};
-  }
-`;
-
-const SubmitButton = styled.button`
-  padding: 0.75rem 1.5rem;
   background-color: ${props => props.theme.colors.primary};
-  color: white;
+  color: ${props => props.theme.colors.background.white};
   border: none;
   border-radius: 0.375rem;
-  font-size: 1rem;
+  font-size: 0.875rem;
   cursor: pointer;
   
   &:hover {
     background-color: ${props => props.theme.colors.primaryHover};
   }
+`;
+
+const StyledListItem = styled(ListItem)`
+  &:hover .task-actions {
+    opacity: 1;
+  }
+`;
+
+const AddTaskInput = styled.div`
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: 0.5rem;
+  display: flex;
+  gap: 1rem;
   
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  input {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    font-size: 1rem;
+    
+    &::placeholder {
+      color: ${props => props.theme.colors.text.light};
+    }
+    
+    &:focus {
+      outline: none;
+    }
+  }
+
+  @media (max-width: ${props => props.theme.breakpoints.sm}) {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  color: ${props => props.theme.colors.text.light};
+  padding: 2rem 0;
+`;
+
+const LoadingState = styled.div`
+  text-align: center;
+  color: ${props => props.theme.colors.text.light};
+  padding: 2rem 0;
+`;
+
+const ErrorState = styled.div`
+  text-align: center;
+  color: ${props => props.theme.colors.text.primary};
+  padding: 2rem 0;
+`;
+
+const SearchBar = styled.div`
+  position: relative;
+  width: 300px;
+  
+  input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    padding-left: 2.5rem;
+    border: 1px solid ${props => props.theme.colors.border};
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    
+    &::placeholder {
+      color: ${props => props.theme.colors.text.light};
+    }
+  }
+  
+  &::before {
+    content: "🔍";
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: ${props => props.theme.colors.text.light};
   }
 `;
 
 function formatDuration(fromDate: string, toDate: string): string {
-    const start = new Date(fromDate);
-    const end = new Date(toDate);
-    const diffMs = end.getTime() - start.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  const diffMs = end.getTime() - start.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (diffDays > 0) {
-        return `${diffDays}d ${diffHours}h`;
-    }
-    return `${diffHours}h`;
+  if (diffDays > 0) {
+    return `${diffDays}d ${diffHours}h`;
+  }
+  return `${diffHours}h`;
 }
 
 export default function ProjectDetails() {
-    const { projectId } = useParams<{ projectId: string }>();
-    const navigate = useNavigate();
-    const [project, setProject] = useState<Project | null>(null);
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [newTaskTitle, setNewTaskTitle] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  const [project, setProject] = useState<Project | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editedDescription, setEditedDescription] = useState('');
+  const { editTask } = useEditTask();
+  const { deleteTask } = useDeleteTask();
 
-    const loadProjectAndTasks = async () => {
-        if (!projectId) return;
+  const loadProjectAndTasks = async () => {
+    if (!projectId) return;
 
-        setIsLoading(true);
-        setError(null);
+    setIsLoading(true);
+    setError(null);
 
-        try {
-            const projectData = await projectService.getById(projectId);
-            if (!projectData) {
-                throw new Error('Project not found');
-            }
-            setProject(projectData);
+    try {
+      const projectData = await projectService.getById(projectId);
+      if (!projectData) {
+        throw new Error('Project not found');
+      }
+      setProject(projectData);
 
-            const allTasks = await taskService.getAll();
-            const projectTasks = allTasks.filter(task => task.projectId === projectId);
-            setTasks(projectTasks);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load project');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadProjectAndTasks();
-    }, [projectId]);
-
-    const handleAddTask = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!projectId || !newTaskTitle.trim() || isSubmitting) return;
-
-        setIsSubmitting(true);
-        try {
-            const newTask: CreateTaskInput = {
-                title: newTaskTitle.trim(),
-                projectId: projectId,
-                priority: TaskPriority.MEDIUM,
-            };
-
-            await taskService.create(newTask);
-            await loadProjectAndTasks();
-            setNewTaskTitle('');
-            toast.success('Task added successfully');
-        } catch (error) {
-            toast.error('Failed to add task');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleToggleComplete = async (taskId: string) => {
-        const task = tasks.find(t => t.id === taskId);
-        if (!task) return;
-
-        try {
-            const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.PENDING : TaskStatus.COMPLETED;
-            await taskService.update(taskId, {
-                status: newStatus,
-                completedAt: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : undefined
-            });
-            await loadProjectAndTasks();
-            toast.success('Task status updated');
-        } catch (error) {
-            toast.error('Failed to update task status');
-        }
-    };
-
-    const handleDeleteTask = async (taskId: string) => {
-        try {
-            await taskService.delete(taskId);
-            await loadProjectAndTasks();
-            toast.success('Task deleted');
-        } catch (error) {
-            toast.error('Failed to delete task');
-        }
-    };
-
-    const handleEditTask = async (taskId: string) => {
-        // Navigate to task edit modal/page
-        // This will be implemented later
-        toast.info('Edit task functionality coming soon');
-    };
-
-    if (isLoading) {
-        return <Container>Loading...</Container>;
+      const allTasks = await taskService.getAll();
+      const projectTasks = allTasks.filter(task => task.projectId === projectId);
+      setTasks(projectTasks);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load project');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (error || !project) {
-        return <Container>Error: {error || 'Project not found'}</Container>;
+  useEffect(() => {
+    loadProjectAndTasks();
+  }, [projectId]);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const filtered = tasks.filter(task =>
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+      setFilteredTasks(filtered);
     }
+  }, [tasks, searchQuery]);
 
-    return (
-        <Container>
-            <Header>
-                <BackButton onClick={() => navigate(-1)}>←</BackButton>
-                <ProjectInfo>
-                    <Title>{project.title}</Title>
-                    {project.description && (
-                        <Description>{project.description}</Description>
-                    )}
-                    <Meta>
-                        {project.dueDate && (
-                            <span>📅 Due: {new Date(project.dueDate).toLocaleDateString()}</span>
-                        )}
-                        <span>📝 {tasks.length} tasks</span>
-                        <span>📊 Status: {project.status}</span>
-                    </Meta>
-                </ProjectInfo>
-            </Header>
+  const handleAddTask = async (e: React.FormEvent | React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.type === 'keypress' && (e as React.KeyboardEvent).key !== 'Enter') return;
+    e.preventDefault();
 
-            <Section>
-                <SectionHeader>
-                    <SectionTitle>Tasks</SectionTitle>
-                </SectionHeader>
+    if (!projectId || !newTaskTitle.trim() || isSubmitting) return;
 
-                <AddTaskForm onSubmit={handleAddTask}>
-                    <TaskInput
-                        type="text"
-                        placeholder="Add a new task"
-                        value={newTaskTitle}
-                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                        disabled={isSubmitting}
-                    />
-                    <SubmitButton type="submit" disabled={isSubmitting || !newTaskTitle.trim()}>
-                        {isSubmitting ? 'Adding...' : 'Add Task'}
-                    </SubmitButton>
-                </AddTaskForm>
+    setIsSubmitting(true);
+    try {
+      const newTask: CreateTaskInput = {
+        title: newTaskTitle.trim(),
+        projectId: projectId,
+        priority: TaskPriority.MEDIUM,
+      };
 
-                {tasks.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#6b7280', padding: '2rem 0' }}>
-                        No tasks in this project yet
-                    </p>
-                ) : (
-                    <TaskList>
-                        {tasks.map(task => (
-                            <TaskItem key={task.id}>
-                                <TaskHeader>
-                                    <input
-                                        type="checkbox"
-                                        checked={task.status === TaskStatus.COMPLETED}
-                                        onChange={() => handleToggleComplete(task.id)}
-                                    />
-                                    <TaskTitle $completed={task.status === TaskStatus.COMPLETED}>
-                                        {task.title}
-                                    </TaskTitle>
-                                    <TaskActions>
-                                        <ActionButton onClick={() => handleEditTask(task.id)}>Edit</ActionButton>
-                                        <ActionButton onClick={() => handleDeleteTask(task.id)}>Delete</ActionButton>
-                                    </TaskActions>
-                                </TaskHeader>
-                                {task.description && (
-                                    <TaskDetails>{task.description}</TaskDetails>
-                                )}
-                                <TaskDuration>
-                                    {task.fromDate && task.toDate ? (
-                                        <>
-                                            <span>⏱️ Duration: {formatDuration(task.fromDate, task.toDate)}</span>
-                                            <span>🕒 {new Date(task.fromDate).toLocaleString()} - {new Date(task.toDate).toLocaleString()}</span>
-                                        </>
-                                    ) : task.fromDate ? (
-                                        <span>🕒 From: {new Date(task.fromDate).toLocaleString()}</span>
-                                    ) : task.toDate ? (
-                                        <span>🕒 Due: {new Date(task.toDate).toLocaleString()}</span>
-                                    ) : null}
-                                </TaskDuration>
-                            </TaskItem>
-                        ))}
-                    </TaskList>
-                )}
-            </Section>
-        </Container>
-    );
+      await taskService.create(newTask);
+      await loadProjectAndTasks();
+      setNewTaskTitle('');
+      toast.success('Task added successfully');
+    } catch (error) {
+      toast.error('Failed to add task');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleComplete = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    try {
+      const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.PENDING : TaskStatus.COMPLETED;
+      await editTask(id, {
+        status: newStatus,
+        completedAt: newStatus === TaskStatus.COMPLETED ? new Date().toISOString() : undefined
+      });
+      await loadProjectAndTasks();
+      toast.success('Task status updated');
+    } catch (error) {
+      toast.error('Failed to update task status');
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    try {
+      await deleteTask(id);
+      await loadProjectAndTasks();
+      toast.success('Task deleted');
+    } catch (error) {
+      toast.error('Failed to delete task');
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+  };
+
+  const handleCloseModal = () => {
+    setEditingTask(null);
+  };
+
+  const handleUpdateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
+    try {
+      const updatedTask = await editTask(id, updates);
+      await loadProjectAndTasks();
+      toast.success('Task updated successfully');
+      return updatedTask;
+    } catch (error) {
+      toast.error('Failed to update task');
+      throw error;
+    }
+  };
+
+  const handleEditDescription = () => {
+    if (!project) return;
+    setIsEditingDescription(true);
+    setEditedDescription(project.description || '');
+  };
+
+  const handleSaveDescription = async () => {
+    if (!project) return;
+    try {
+      await projectService.update(project.id, {
+        description: editedDescription
+      });
+      await loadProjectAndTasks();
+      toast.success('Project description updated');
+      setIsEditingDescription(false);
+    } catch (error) {
+      toast.error('Failed to update project description');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingDescription(false);
+  };
+
+  if (isLoading) {
+    return <LoadingState>Loading...</LoadingState>;
+  }
+
+  if (error || !project) {
+    return <ErrorState>Error: {error || 'Project not found'}</ErrorState>;
+  }
+
+  return (
+    <Container>
+      <Header>
+        <BackButton onClick={() => navigate('/')}>←</BackButton>
+        <ProjectInfo>
+          <Title>{project.title}</Title>
+          {isEditingDescription ? (
+            <div>
+              <DescriptionInput
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                placeholder="Add a description..."
+              />
+              <div>
+                <button onClick={handleSaveDescription}>Save</button>
+                <button onClick={handleCancelEdit}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <Description>
+              {project.description || 'No description'}
+              <EditButton onClick={handleEditDescription}>✏️</EditButton>
+            </Description>
+          )}
+          <Meta>
+            <span>Status: {project.status}</span>
+            <span>Priority: {project.priority}</span>
+            {project.dueDate && <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>}
+          </Meta>
+        </ProjectInfo>
+      </Header>
+
+      <Section>
+        <SectionHeader>
+          <SectionTitle>Tasks</SectionTitle>
+          <SearchBar>
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </SearchBar>
+        </SectionHeader>
+
+        <AddTaskInput>
+          <input
+            type="text"
+            placeholder="Add a new task"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            onKeyPress={handleAddTask}
+            disabled={isSubmitting}
+          />
+          <button
+            onClick={handleAddTask}
+            disabled={isSubmitting || !newTaskTitle.trim()}
+          >
+            {isSubmitting ? 'Adding...' : 'Add Task'}
+          </button>
+        </AddTaskInput>
+
+        {tasks.length === 0 ? (
+          <EmptyState>No tasks in this project yet</EmptyState>
+        ) : (
+          <TaskList
+            items={searchQuery ? filteredTasks : tasks}
+            onEditTask={handleEditTask}
+            onToggleComplete={handleToggleComplete}
+            onDeleteTask={handleDeleteTask}
+          />
+        )}
+      </Section>
+
+      {editingTask && (
+        <EditTaskModal
+          task={editingTask}
+          onClose={handleCloseModal}
+          onSave={handleUpdateTask}
+        />
+      )}
+    </Container>
+  );
 } 

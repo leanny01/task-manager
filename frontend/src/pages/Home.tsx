@@ -66,21 +66,20 @@ const Header = styled.header`
 `;
 
 const SearchBar = styled.div`
-  flex: 1;
-  max-width: 600px;
-  margin: 0 2rem;
   position: relative;
+  width: 300px;
+  margin-right: 2rem;
   
   input {
     width: 100%;
     padding: 0.75rem 1rem;
     padding-left: 2.5rem;
-    border: 1px solid #e5e7eb;
+    border: 1px solid ${props => props.theme.colors.border};
     border-radius: 0.5rem;
     font-size: 1rem;
     
     &::placeholder {
-      color: #9ca3af;
+      color: ${props => props.theme.colors.text.light};
     }
   }
   
@@ -90,7 +89,7 @@ const SearchBar = styled.div`
     left: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #9ca3af;
+    color: ${props => props.theme.colors.text.light};
   }
 `;
 
@@ -164,6 +163,7 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'upcoming' | 'completed'>('all');
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadTasks();
@@ -237,49 +237,54 @@ export default function Home() {
     });
   }, [projects, tasks]);
 
-  const filteredItems = combinedItems.filter(item => {
-    const isProject = 'taskIds' in item;
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
-    if (isProject) {
-      // Always show projects in 'all' view
-      if (activeFilter === 'all') return true;
+  const filteredItems = useMemo(() => {
+    let items = combinedItems;
 
-      // For other filters, show project if it matches the criteria
-      const dueDate = item.dueDate ? new Date(item.dueDate) : null;
-      switch (activeFilter) {
-        case 'today':
-          if (!dueDate) return false;
-          const today = new Date();
-          return dueDate.getDate() === today.getDate() &&
-            dueDate.getMonth() === today.getMonth() &&
-            dueDate.getFullYear() === today.getFullYear();
-        case 'upcoming':
-          return dueDate ? dueDate > new Date() : false;
-        case 'completed':
-          return item.status === 'COMPLETED';
-        default:
-          return true;
-      }
-    } else {
-      // Filter tasks as before
-      const task = item;
-      switch (activeFilter) {
-        case 'completed':
-          return task.status === TaskStatus.COMPLETED;
-        case 'today':
-          const today = new Date();
-          const taskDate = task.toDate ? new Date(task.toDate) : null;
-          return taskDate &&
-            taskDate.getDate() === today.getDate() &&
-            taskDate.getMonth() === today.getMonth() &&
-            taskDate.getFullYear() === today.getFullYear();
-        case 'upcoming':
-          return task.toDate && new Date(task.toDate) > new Date();
-        default:
-          return true;
-      }
+    // Apply search filter
+    if (searchQuery.trim()) {
+      items = items.filter(item => {
+        const isProject = 'taskIds' in item;
+        if (isProject) {
+          return item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        } else {
+          return item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+      });
     }
-  });
+
+    // Apply status filter
+    return items.filter(item => {
+      const isProject = 'taskIds' in item;
+      if (isProject) {
+        if (activeFilter === 'all') return true;
+        if (activeFilter === 'completed') return item.status === 'COMPLETED';
+        return true;
+      } else {
+        const task = item;
+        switch (activeFilter) {
+          case 'completed':
+            return task.status === TaskStatus.COMPLETED;
+          case 'today':
+            const today = new Date();
+            const taskDate = task.toDate ? new Date(task.toDate) : null;
+            return taskDate &&
+              taskDate.getDate() === today.getDate() &&
+              taskDate.getMonth() === today.getMonth() &&
+              taskDate.getFullYear() === today.getFullYear();
+          case 'upcoming':
+            return task.toDate && new Date(task.toDate) > new Date();
+          default:
+            return true;
+        }
+      }
+    });
+  }, [combinedItems, searchQuery, activeFilter]);
 
   const isLoading = isLoadingTasks || isLoadingProjects || isCreating || isEditing || isCompleting;
   const error = tasksError || projectsError || createError || editError || completeError;
@@ -307,7 +312,12 @@ export default function Home() {
       <MainContent>
         <Header>
           <SearchBar>
-            <input type="text" placeholder="Add a task" />
+            <input
+              type="text"
+              placeholder="Search tasks and projects..."
+              value={searchQuery}
+              onChange={handleSearch}
+            />
           </SearchBar>
           <UserProfile>
             <img src="/default-avatar.png" alt="User profile" />

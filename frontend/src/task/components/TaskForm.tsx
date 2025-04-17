@@ -91,7 +91,7 @@ export default function TaskForm({ onSubmit, isLoading = false }: TaskFormProps)
         title: title.trim(),
         description: description.trim(),
         priority,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        toDate: dueDate ? new Date(dueDate).toISOString() : undefined,
       });
 
       // Reset form
