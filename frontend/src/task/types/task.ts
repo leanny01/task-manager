@@ -1,14 +1,15 @@
-export enum TaskPriority {
-  LOW = "LOW",
-  MEDIUM = "MEDIUM",
-  HIGH = "HIGH",
-}
+import { TaskStatus, TaskPriority } from "./enums";
 
 export enum TaskStatus {
   PENDING = "PENDING",
   IN_PROGRESS = "IN_PROGRESS",
   COMPLETED = "COMPLETED",
-  ARCHIVED = "ARCHIVED",
+}
+
+export enum TaskPriority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
 }
 
 export interface TaskMeta {
@@ -31,10 +32,12 @@ export interface TaskBase {
   fromDate?: string;
   toDate?: string;
   completedAt?: string;
+  projectId?: string;
+  projectName?: string;
   calendarEventId?: string;
 }
 
-export interface Task extends TaskBase, TaskMeta {}
+export type Task = TaskBase;
 
 export interface CreateTaskInput {
   title: string;
@@ -42,7 +45,6 @@ export interface CreateTaskInput {
   priority: TaskPriority;
   fromDate?: string;
   toDate?: string;
-  status?: TaskStatus;
   projectId?: string;
 }
 
@@ -55,4 +57,12 @@ export interface UpdateTaskInput {
   toDate?: string;
   completedAt?: string;
   projectId?: string;
+}
+
+export interface ListItemData extends TaskBase {
+  subtitle?: React.ReactNode;
+  actions?: Array<{
+    label: string;
+    onClick: () => void;
+  }>;
 }

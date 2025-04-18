@@ -17,7 +17,6 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             projects: []
         }
     });
-    console.log({ state });
 
     const startSync = useCallback(() => {
         setState(prev => ({

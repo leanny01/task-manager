@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Task, CreateTaskInput, TaskStatus, TaskPriority } from '../task/types/task';
-import { ProjectPriority, ProjectStatus } from '../project/types/project';
-import TaskList from '../task/list/TaskList';
-import EditTaskModal from '../task/edit/EditTaskModal';
+import React, { useState, useEffect } from 'react';
+import { Task, TaskStatus, TaskPriority } from '../task/types/task';
 import { useCreateTask } from '../task/create/useCreateTask';
 import { useEditTask } from '../task/edit/useEditTask';
 import { useListTasks } from '../task/list/useListTasks';
 import { useMarkCompleteTask } from '../task/complete/useMarkCompleteTask';
 import { taskService } from '../task/services/taskService';
-import { projectService } from '../project/services/projectService';
-import { toast } from 'react-toastify';
-import ProjectList from '../project/list/ProjectList';
 import { useProjects } from '../project/hooks/useProjects';
 import SyncStatus from '../calendar/components/SyncStatus';
-import { ListIcon, TodayIcon, UpcomingIcon, CheckCircleIcon } from '../shared/components/Icons';
+import { ListIcon, TodayIcon, UpcomingIcon, CheckCircleIcon, PlusIcon, FolderIcon } from '../shared/components/Icons';
+import AllTasksView from '../task/views/AllTasksView';
+import TodayTasksView from '../task/views/TodayTasksView';
+import CompletedTasksView from '../task/views/CompletedTasksView';
+import ProjectsView from '../task/views/ProjectsView';
+import EditTaskModal from '../task/edit/EditTaskModal';
 import {
   AppContainer,
   Sidebar,
@@ -28,8 +27,6 @@ import {
   AddButton,
   TaskContainer,
   ErrorMessage,
-  Section,
-  SectionTitle,
   LoadingState,
   EmptyState
 } from './Home.styles';
@@ -93,8 +90,7 @@ export default function Home() {
   const { markComplete, isLoading: isCompleting, error: completeError } = useMarkCompleteTask();
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'upcoming'>('all');
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'completed' | 'projects'>('all');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -128,12 +124,14 @@ export default function Home() {
   const handleUpdateTask = async (id: string, updates: Partial<Task>): Promise<Task> => {
     const updatedTask = await editTask(id, updates);
     await loadTasks();
+    await refreshProjects();
     return updatedTask;
   };
 
   const handleDeleteTask = async (id: string): Promise<void> => {
     await taskService.delete(id);
     await loadTasks();
+    await refreshProjects();
   };
 
   const handleToggleComplete = async (id: string): Promise<void> => {
@@ -149,110 +147,6 @@ export default function Home() {
     }
   };
 
-  const handlePromoteToProject = async (task: Task) => {
-    try {
-      await projectService.promoteTaskToProject(task);
-      await loadTasks();
-      toast.success('Task promoted to project successfully');
-    } catch (error) {
-      console.error('Error promoting task to project:', error);
-      toast.error('Failed to promote task to project');
-    }
-  };
-
-  // Combine and sort projects and standalone tasks
-  const combinedItems = useMemo(() => {
-    const standaloneItems = tasks.filter(task => !task.projectId);
-    return [...projects, ...standaloneItems].sort((a, b) => {
-      const dateA = new Date(('taskIds' in a ? a.dueDate : a.toDate) || '').getTime() || Infinity;
-      const dateB = new Date(('taskIds' in b ? b.dueDate : b.toDate) || '').getTime() || Infinity;
-      return dateA - dateB;
-    });
-  }, [projects, tasks]);
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  // Calculate task counts
-  const taskCounts = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return {
-      all: tasks.filter(task => !task.projectId).length,
-      today: tasks.filter(task => {
-        if (task.projectId) return false;
-        const taskDate = task.toDate ? new Date(task.toDate) : null;
-        if (!taskDate) return false;
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === today.getTime();
-      }).length,
-      upcoming: tasks.filter(task => {
-        if (task.projectId) return false;
-        return task.toDate && new Date(task.toDate) > today;
-      }).length,
-      completed: tasks.filter(task =>
-        !task.projectId && task.status === TaskStatus.COMPLETED
-      ).length
-    };
-  }, [tasks]);
-
-  // Filter items based on current view
-  const filteredItems = useMemo(() => {
-    let items = combinedItems;
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      items = items.filter(item => {
-        const isProject = 'taskIds' in item;
-        if (isProject) {
-          return item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-        } else {
-          return item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-        }
-      });
-    }
-
-    // Apply status filter
-    return items.filter(item => {
-      const isProject = 'taskIds' in item;
-      if (isProject) {
-        return true; // Always show projects
-      } else {
-        const task = item as Task;
-        const isCompleted = task.status === TaskStatus.COMPLETED;
-
-        // If task is completed, only show if showCompleted is true
-        if (isCompleted && !showCompleted) return false;
-
-        switch (activeFilter) {
-          case 'today': {
-            const today = new Date();
-            const taskDate = task.toDate ? new Date(task.toDate) : null;
-            return taskDate &&
-              taskDate.getDate() === today.getDate() &&
-              taskDate.getMonth() === today.getMonth() &&
-              taskDate.getFullYear() === today.getFullYear();
-          }
-          case 'upcoming':
-            return task.toDate && new Date(task.toDate) > new Date();
-          default:
-            return true;
-        }
-      }
-    });
-  }, [combinedItems, searchQuery, activeFilter, showCompleted]);
-
-  const toggleShowCompleted = () => {
-    setShowCompleted(!showCompleted);
-  };
-
-  const isLoading = isLoadingTasks || isLoadingProjects || isCreating || isEditing || isCompleting;
-  const error = tasksError || projectsError || createError || editError || completeError;
-
   const handleAddTaskClick = () => {
     if (newTaskTitle.trim()) {
       createTask({
@@ -266,6 +160,51 @@ export default function Home() {
       });
     }
   };
+
+  // Calculate task counts
+  const taskCounts = {
+    all: tasks.length,
+    today: tasks.filter(task => {
+      const taskDate = task.toDate ? new Date(task.toDate) : null;
+      if (!taskDate) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate.getTime() === today.getTime();
+    }).length,
+    completed: tasks.filter(task => task.status === TaskStatus.COMPLETED).length,
+    projects: projects.length
+  };
+
+  const renderActiveView = () => {
+    const commonProps = {
+      tasks: tasks.filter(task => {
+        if (!searchQuery) return true;
+        return task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      }),
+      projects,
+      projectTasks,
+      onToggleComplete: handleToggleComplete,
+      onDeleteTask: handleDeleteTask,
+      onEditTask: handleEditTask,
+    };
+
+    switch (activeFilter) {
+      case 'today':
+        return <TodayTasksView {...commonProps} />;
+      case 'completed':
+        return <CompletedTasksView {...commonProps} />;
+      case 'projects':
+        return <ProjectsView {...commonProps} />;
+      case 'all':
+      default:
+        return <AllTasksView {...commonProps} />;
+    }
+  };
+
+  const isLoading = isLoadingTasks || isLoadingProjects || isCreating || isEditing || isCompleting;
+  const error = tasksError || projectsError || createError || editError || completeError;
 
   return (
     <AppContainer>
@@ -300,21 +239,22 @@ export default function Home() {
           </NavItem>
           <NavItem>
             <NavToggle
-              className={activeFilter === 'upcoming' ? 'active' : ''}
-              onClick={() => setActiveFilter('upcoming')}
-              $isActive={activeFilter === 'upcoming'}
+              className={activeFilter === 'projects' ? 'active' : ''}
+              onClick={() => setActiveFilter('projects')}
+              $isActive={activeFilter === 'projects'}
             >
               <NavItemContent>
-                <UpcomingIcon size={16} />
-                <span>Upcoming</span>
-                <NavBadge>{taskCounts.upcoming}</NavBadge>
+                <FolderIcon size={16} />
+                <span>Projects</span>
+                <NavBadge>{taskCounts.projects}</NavBadge>
               </NavItemContent>
             </NavToggle>
           </NavItem>
           <NavItem>
             <NavToggle
-              onClick={toggleShowCompleted}
-              $isActive={showCompleted}
+              className={activeFilter === 'completed' ? 'active' : ''}
+              onClick={() => setActiveFilter('completed')}
+              $isActive={activeFilter === 'completed'}
             >
               <NavItemContent>
                 <CheckCircleIcon size={16} />
@@ -331,9 +271,9 @@ export default function Home() {
           <SearchBar>
             <input
               type="text"
-              placeholder="Search tasks and projects..."
+              placeholder="Search tasks..."
               value={searchQuery}
-              onChange={handleSearch}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </SearchBar>
           <HeaderActions>
@@ -353,40 +293,17 @@ export default function Home() {
               onChange={(e) => setNewTaskTitle(e.target.value)}
               onKeyPress={handleAddTask}
             />
-            <AddButton
-              onClick={handleAddTaskClick}
-              title="Add task"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+            <AddButton onClick={handleAddTaskClick}>
+              <PlusIcon size={16} />
             </AddButton>
           </AddTaskInputContainer>
 
           {isLoading ? (
             <LoadingState>Loading...</LoadingState>
+          ) : error ? (
+            <ErrorMessage>{error}</ErrorMessage>
           ) : (
-            <>
-              {filteredItems.length === 0 ? (
-                <EmptyState>No items found</EmptyState>
-              ) : (
-                <TaskList
-                  items={filteredItems}
-                  projectTasks={projectTasks}
-                  onEditTask={handleEditTask}
-                  onToggleComplete={handleToggleComplete}
-                  onDeleteTask={handleDeleteTask}
-                  onPromoteToProject={handlePromoteToProject}
-                />
-              )}
-            </>
-          )}
-
-          {error && (
-            <ErrorMessage>
-              {error}
-            </ErrorMessage>
+            renderActiveView()
           )}
         </TaskContainer>
       </MainContent>
@@ -394,6 +311,7 @@ export default function Home() {
       {editingTask && (
         <EditTaskModal
           task={editingTask}
+          projects={projects}
           onClose={handleCloseModal}
           onSave={handleUpdateTask}
         />

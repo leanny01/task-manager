@@ -5,11 +5,13 @@ import { Task, TaskPriority } from '../types/task';
 import { Input } from '../shared/components/forms/Input';
 import { TextArea } from '../shared/components/forms/TextArea';
 import { Button } from '../shared/components/buttons/Button';
+import { Project } from '../../project/types/project';
 
 interface EditTaskModalProps {
   task: Task;
+  projects: Project[];
   onClose: () => void;
-  onSave: (id: string, task: Partial<Task>) => Promise<Task>;
+  onSave: (id: string, updates: Partial<Task>) => Promise<Task>;
 }
 
 const ModalOverlay = styled.div`
@@ -30,7 +32,7 @@ const ModalContent = styled.div`
   padding: 2rem;
   border-radius: 0.5rem;
   width: 100%;
-  max-width: 32rem;
+  max-width: 500px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
@@ -124,16 +126,33 @@ const DateLink = styled.button`
   }
 `;
 
-export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalProps) {
+const Select = styled.select`
+  padding: 0.75rem;
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  
+  &:focus {
+    outline: none;
+    border-color: ${props => props.theme.colors.primary};
+  }
+`;
+
+export default function EditTaskModal({
+  task,
+  projects,
+  onClose,
+  onSave,
+}: EditTaskModalProps) {
   const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description);
-  const [priority, setPriority] = useState<TaskPriority>(task.priority);
+  const [description, setDescription] = useState(task.description || '');
+  const [priority, setPriority] = useState(task.priority);
   const [showDateInputs, setShowDateInputs] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endDate, setEndDate] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [projectId, setProjectId] = useState(task.projectId || '');
 
   useEffect(() => {
     if (task.fromDate) {
@@ -151,8 +170,6 @@ export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
     try {
       let fromDate: string | undefined;
       let toDate: string | undefined;
@@ -188,16 +205,15 @@ export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalPr
 
       await onSave(task.id, {
         title: title.trim(),
-        description: description?.trim(),
-        priority: priority,
+        description: description.trim() || undefined,
+        priority,
         fromDate,
         toDate,
+        projectId: projectId || undefined
       });
       onClose();
-    } catch (err) {
-      // Error is handled by the parent component
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Failed to update task:', error);
     }
   };
 
@@ -214,14 +230,14 @@ export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalPr
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            disabled={isLoading}
+            disabled={false}
             required
           />
           <TextArea
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            disabled={isLoading}
+            disabled={false}
           />
 
           {!showDateInputs ? (
@@ -236,13 +252,13 @@ export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalPr
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  disabled={isLoading}
+                  disabled={false}
                 />
                 <DateInput
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  disabled={isLoading}
+                  disabled={false}
                 />
               </DateInputRow>
 
@@ -252,24 +268,45 @@ export default function EditTaskModal({ task, onClose, onSave }: EditTaskModalPr
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  disabled={isLoading}
+                  disabled={false}
                 />
                 <DateInput
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  disabled={isLoading}
+                  disabled={false}
                 />
               </DateInputRow>
             </DateInputGroup>
           )}
 
+          <Select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as TaskPriority)}
+          >
+            <option value={TaskPriority.LOW}>Low Priority</option>
+            <option value={TaskPriority.MEDIUM}>Medium Priority</option>
+            <option value={TaskPriority.HIGH}>High Priority</option>
+          </Select>
+
+          <Select
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+          >
+            <option value="">No Project</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.title}
+              </option>
+            ))}
+          </Select>
+
           <ButtonGroup>
-            <Button onClick={onClose} disabled={isLoading}>
+            <Button onClick={onClose} disabled={false}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !title.trim()}>
-              {isLoading ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" disabled={false || !title.trim()}>
+              Save Changes
             </Button>
           </ButtonGroup>
         </Form>
