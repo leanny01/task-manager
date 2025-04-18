@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import moment from 'moment';
 import { Project, ProjectStatus } from '../types/project';
 import { Task, TaskStatus, CreateTaskInput, TaskPriority } from '../../task/types/task';
 import { projectService } from '../services/projectService';
@@ -20,6 +21,7 @@ import EditTaskModal from '../../task/edit/EditTaskModal';
 import { useEditTask } from '../../task/edit/useEditTask';
 import { useDeleteTask } from '../../task/delete/useDeleteTask';
 import TaskList from '../../task/list/TaskList';
+import Timeline from '../../shared/components/Timeline';
 
 const Container = styled.div`
   padding: 2rem;
@@ -218,6 +220,35 @@ const SearchBar = styled.div`
   }
 `;
 
+const ProjectTimeline = styled.div`
+  margin-top: 1rem;
+  padding: 1rem;
+  background: ${props => props.theme.colors.background.light};
+  border-radius: 0.375rem;
+`;
+
+const TimelineRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+const TimelineLabel = styled.span`
+  font-weight: 500;
+  color: ${props => props.theme.colors.text.primary};
+`;
+
+const TimelineValue = styled.span`
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+const TimelineDuration = styled.span`
+  color: ${props => props.theme.colors.primary};
+  font-weight: 500;
+`;
+
 function formatDuration(fromDate: string, toDate: string): string {
   const start = new Date(fromDate);
   const end = new Date(toDate);
@@ -381,6 +412,38 @@ export default function ProjectDetails() {
     setIsEditingDescription(false);
   };
 
+  const calculateProjectTimeline = (tasks: Task[]) => {
+    if (tasks.length === 0) return null;
+
+    const validTasks = tasks.filter(task => task.fromDate && task.toDate);
+    if (validTasks.length === 0) return null;
+
+    const startDates = validTasks.map(task => moment(task.fromDate));
+    const endDates = validTasks.map(task => moment(task.toDate));
+
+    const projectStart = moment.min(startDates).format();
+    const projectEnd = moment.max(endDates).format();
+
+    return {
+      fromDate: projectStart,
+      toDate: projectEnd
+    };
+  };
+
+  const formatDuration = (duration: moment.Duration): string => {
+    const days = Math.floor(duration.asDays());
+    const hours = duration.hours();
+    const minutes = duration.minutes();
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+
   if (isLoading) {
     return <LoadingState>Loading...</LoadingState>;
   }
@@ -418,6 +481,22 @@ export default function ProjectDetails() {
             <span>Priority: {project.priority}</span>
             {project.dueDate && <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>}
           </Meta>
+          {tasks.length > 0 && (
+            <ProjectTimeline>
+              {(() => {
+                const timeline = calculateProjectTimeline(tasks);
+                if (!timeline) return null;
+
+                return (
+                  <Timeline
+                    fromDate={timeline.fromDate}
+                    toDate={timeline.toDate}
+                    showLabels={true}
+                  />
+                );
+              })()}
+            </ProjectTimeline>
+          )}
         </ProjectInfo>
       </Header>
 

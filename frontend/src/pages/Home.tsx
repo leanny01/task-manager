@@ -13,145 +13,24 @@ import { projectService } from '../project/services/projectService';
 import { toast } from 'react-toastify';
 import ProjectList from '../project/list/ProjectList';
 import { useProjects } from '../project/hooks/useProjects';
-
-const AppContainer = styled.div`
-  display: grid;
-  grid-template-columns: 250px 1fr;
-  min-height: 100vh;
-  background: #fff;
-`;
-
-const Sidebar = styled.aside`
-  padding: 2rem 1rem;
-  border-right: 1px solid #e5e7eb;
-`;
-
-const Logo = styled.h1`
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  padding: 0 1rem;
-`;
-
-const NavList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-const NavItem = styled.li<{ active?: boolean }>`
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: ${props => props.active ? '#f3f4f6' : 'transparent'};
-  
-  &:hover {
-    background: #f3f4f6;
-  }
-`;
-
-const MainContent = styled.main`
-  padding: 1.5rem 2rem;
-`;
-
-const Header = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-`;
-
-const SearchBar = styled.div`
-  position: relative;
-  width: 300px;
-  margin-right: 2rem;
-  
-  input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    padding-left: 2.5rem;
-    border: 1px solid ${props => props.theme.colors.border};
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    
-    &::placeholder {
-      color: ${props => props.theme.colors.text.light};
-    }
-  }
-  
-  &::before {
-    content: "🔍";
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: ${props => props.theme.colors.text.light};
-  }
-`;
-
-const UserProfile = styled.div`
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background: #e5e7eb;
-  overflow: hidden;
-  
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`;
-
-const AddTaskInput = styled.div`
-  margin-bottom: 2rem;
-  padding: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  
-  input {
-    width: 100%;
-    padding: 0.5rem;
-    border: none;
-    font-size: 1rem;
-    
-    &::placeholder {
-      color: #9ca3af;
-    }
-    
-    &:focus {
-      outline: none;
-    }
-  }
-`;
-
-const TaskContainer = styled.div`
-  max-width: 800px;
-`;
-
-const ErrorMessage = styled.p`
-  color: red;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background-color: #fee2e2;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-`;
-
-const Section = styled.section`
-  margin-bottom: 2rem;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 1rem 0;
-`;
+import {
+  AppContainer,
+  Sidebar,
+  Logo,
+  NavList,
+  NavItem,
+  MainContent,
+  Header,
+  SearchBar,
+  UserProfile,
+  AddTaskInput,
+  TaskContainer,
+  ErrorMessage,
+  Section,
+  SectionTitle,
+  LoadingState,
+  EmptyState
+} from './Home.styles';
 
 export default function Home() {
   const { tasks, isLoading: isLoadingTasks, error: tasksError, loadTasks } = useListTasks();
@@ -336,13 +215,11 @@ export default function Home() {
           </AddTaskInput>
 
           {isLoading ? (
-            <div style={{ textAlign: 'center', padding: '2rem' }}>Loading...</div>
+            <LoadingState>Loading...</LoadingState>
           ) : (
             <>
               {filteredItems.length === 0 ? (
-                <div style={{ textAlign: 'center', color: '#6b7280', padding: '2rem 0' }}>
-                  No items found
-                </div>
+                <EmptyState>No items found</EmptyState>
               ) : (
                 <TaskList
                   items={filteredItems}

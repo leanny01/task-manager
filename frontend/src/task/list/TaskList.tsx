@@ -99,7 +99,8 @@ export default function TaskList({
                 title: task.title || '',
                 description: task.description,
                 status: task.status || TaskStatus.PENDING,
-                dueDate: task.toDate,
+                fromDate: task.fromDate,
+                toDate: task.toDate,
                 completedAt: task.completedAt,
                 projectId: task.projectId,
                 actions: [

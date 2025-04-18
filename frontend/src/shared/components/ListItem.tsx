@@ -1,5 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
+import moment from 'moment';
+import { TaskStatus } from '../../task/types/task';
+import Timeline from './Timeline';
 
 const BaseListItem = styled.li<{ $variant?: 'project' | 'task' }>`
   display: flex;
@@ -65,34 +68,67 @@ export const ListItemBadge = styled.span<{ variant?: 'project' | 'subtask' }>`
                 ? props.theme.colors.text.light
                 : props.theme.colors.border};
   color: ${props => props.variant === 'subtask' || props.theme.colors.background.white ? props.theme.colors.background.white : props.theme.colors.text.secondary};
-display: flex;
-align - items: center;
-gap: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 `;
 
 export const ListItemActions = styled.div`
-display: flex;
-gap: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
 `;
 
 export const ListItemAction = styled.button`
-padding: 0.25rem 0.5rem;
-background: none;
-border: none;
-font - size: 0.875rem;
-color: ${props => props.theme.colors.text.secondary};
-cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  background: none;
+  border: none;
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.text.secondary};
+  cursor: pointer;
   
   &:hover {
     color: ${props => props.theme.colors.text.primary};
-}
+  }
 
   &.promote {
     color: ${props => props.theme.colors.primary};
     display: flex;
-    align - items: center;
+    align-items: center;
     gap: 0.25rem;
-}
+  }
+`;
+
+const TimelineTooltip = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  display: none;
+`;
+
+const StyledListItem = styled.div<{ variant: 'task' | 'project' }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    
+    ${TimelineTooltip} {
+      display: block;
+    }
+  }
 `;
 
 interface ListItemData {
@@ -125,26 +161,8 @@ export default function ListItem({ variant = 'task', onClick, data, className }:
         return null;
     }
 
-    const formatDuration = (fromDate: string, toDate: string): string => {
-        const start = new Date(fromDate);
-        const end = new Date(toDate);
-        const diffMs = end.getTime() - start.getTime();
-        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-        if (diffDays > 0) {
-            return `${diffDays}d ${diffHours} h`;
-        }
-        return `${diffHours} h`;
-    };
-
     return (
-        <BaseListItem
-            $variant={variant}
-            onClick={onClick}
-            className={className}
-            style={{ cursor: onClick ? 'pointer' : 'default' }}
-        >
+        <StyledListItem variant={variant} onClick={onClick}>
             <ListItemContent>
                 <ListItemHeader>
                     <ListItemTitle $status={data.status}>{data.title}</ListItemTitle>
@@ -163,21 +181,11 @@ export default function ListItem({ variant = 'task', onClick, data, className }:
                 {data.description && (
                     <ListItemDescription>{data.description}</ListItemDescription>
                 )}
-                <ListItemMeta>
-                    {data.fromDate && data.toDate ? (
-                        <>
-                            <span>⏱️ Duration: {formatDuration(data.fromDate, data.toDate)}</span>
-                            <span>🕒 {new Date(data.fromDate).toLocaleString()} - {new Date(data.toDate).toLocaleString()}</span>
-                        </>
-                    ) : data.fromDate ? (
-                        <span>🕒 From: {new Date(data.fromDate).toLocaleString()}</span>
-                    ) : data.toDate ? (
-                        <span>🕒 Due: {new Date(data.toDate).toLocaleString()}</span>
-                    ) : null}
-                    {data.completedAt && (
-                        <span>✓ Completed: {new Date(data.completedAt).toLocaleDateString()}</span>
-                    )}
-                </ListItemMeta>
+                {data.completedAt && (
+                    <ListItemMeta>
+                        <span>✓ Completed: {moment(data.completedAt).format('MMM D, YYYY')}</span>
+                    </ListItemMeta>
+                )}
             </ListItemContent>
             {data.actions && data.actions.length > 0 && (
                 <ListItemActions className="task-actions">
@@ -192,6 +200,16 @@ export default function ListItem({ variant = 'task', onClick, data, className }:
                     ))}
                 </ListItemActions>
             )}
-        </BaseListItem>
+
+            {variant === 'task' && data.fromDate && data.toDate && (
+                <TimelineTooltip>
+                    <Timeline
+                        fromDate={data.fromDate}
+                        toDate={data.toDate}
+                        showLabels={false}
+                    />
+                </TimelineTooltip>
+            )}
+        </StyledListItem>
     );
 } 
