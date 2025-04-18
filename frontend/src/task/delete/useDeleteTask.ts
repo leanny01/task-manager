@@ -13,7 +13,6 @@ export const useDeleteTask = () => {
       setError(null);
       await taskService.delete(task.id);
       await deleteTaskEvent(task);
-      toast.success("Task deleted successfully");
     } catch (err) {
       setError("Failed to delete task");
       console.error(err);

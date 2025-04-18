@@ -15,7 +15,6 @@ export const useEditTask = () => {
     try {
       const updatedTask = await taskService.update(id, task);
       await updateTaskEvent(updatedTask);
-      toast.success("Task updated successfully");
       return updatedTask;
     } catch (err) {
       setError("Failed to update task");
