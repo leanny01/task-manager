@@ -1,38 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
-import { Task, TaskStatus } from '../types/task';
+import { Task } from '../types/task';
 import { Project } from '../../project/types/project';
 import ListItem from '../../shared/components/ListItem';
+import ProjectGroup from '../../shared/components/ProjectGroup';
 
 const List = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
-`;
-
-const TaskContainer = styled.div`
-  display: flex;
-  align-items: center;
-  flex: 1;
-  gap: 1rem;
-`;
-
-const Checkbox = styled.input`
-  margin-right: 1rem;
-`;
-
-const StyledTaskItem = styled(ListItem)`
-  &:hover {
-    .task-actions {
-      opacity: 1;
-    }
-  }
-
-  .task-actions {
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-  }
 `;
 
 interface TaskListProps {
@@ -42,84 +18,80 @@ interface TaskListProps {
   onDeleteTask: (id: string) => void;
   onEditTask: (task: Task) => void;
   onPromoteToProject?: (task: Task) => void;
+  onProjectClick?: (project: Project) => void;
+  onAddTask?: (projectId: string) => void;
 }
 
 export default function TaskList({
   items,
-  projectTasks,
+  projectTasks = {},
   onToggleComplete,
   onDeleteTask,
   onEditTask,
-  onPromoteToProject
+  onPromoteToProject,
+  onProjectClick = () => { },
+  onAddTask,
 }: TaskListProps) {
-  const navigate = useNavigate();
-
-  const isProject = (item: Task | Project): item is Project => {
-    return 'taskIds' in item;
-  };
-
-  const handlePromoteToProject = async (task: Task) => {
-    if (onPromoteToProject) {
-      onPromoteToProject(task);
+  const handleTaskAction = (task: Task, action: string) => {
+    switch (action) {
+      case 'toggle':
+        onToggleComplete(task.id);
+        break;
+      case 'edit':
+        onEditTask(task);
+        break;
+      case 'delete':
+        onDeleteTask(task.id);
+        break;
     }
-  };
-
-  const handleProjectClick = (projectId: string) => {
-    navigate(`/projects/${projectId}`);
   };
 
   return (
     <List>
       {items.map(item => {
-        if (isProject(item)) {
-          // Render Project
+        if ('taskIds' in item) {
+          // This is a project
+          const project = item as Project;
+          const tasks = projectTasks[project.id] || [];
           return (
-            <ListItem
-              key={item.id}
-              variant="project"
-              onClick={() => handleProjectClick(item.id)}
-              data={{
-                id: item.id,
-                title: item.title || '',
-                description: item.description,
-                dueDate: item.dueDate,
-                taskCount: projectTasks?.[item.id]?.length || 0
-              }}
+            <ProjectGroup
+              key={project.id}
+              project={project}
+              tasks={tasks}
+              onTaskAction={handleTaskAction}
+              onProjectClick={onProjectClick}
+              onAddTask={onAddTask}
             />
           );
         } else {
-          // Render Task
-          const task = item;
+          // This is a standalone task
+          const task = item as Task;
           return (
-            <StyledTaskItem
+            <ListItem
               key={task.id}
               variant="task"
               data={{
-                id: task.id,
-                title: task.title || '',
-                description: task.description,
-                status: task.status || TaskStatus.PENDING,
-                fromDate: task.fromDate,
-                toDate: task.toDate,
-                completedAt: task.completedAt,
-                projectId: task.projectId,
+                ...task,
                 actions: [
                   {
+                    label: 'Toggle Complete',
+                    onClick: () => onToggleComplete(task.id),
+                  },
+                  {
                     label: 'Edit',
-                    onClick: () => onEditTask(task)
+                    onClick: () => onEditTask(task),
                   },
                   {
                     label: 'Delete',
-                    onClick: () => onDeleteTask(task.id)
+                    onClick: () => onDeleteTask(task.id),
                   },
-                  ...(!task.projectId && onPromoteToProject
+                  ...(onPromoteToProject
                     ? [{
-                      label: '⭐ Promote to Project',
-                      onClick: () => handlePromoteToProject(task),
-                      className: 'promote'
+                      label: 'Promote to Project',
+                      onClick: () => onPromoteToProject(task),
                     }]
-                    : [])
-                ]
+                    : []),
+                ],
               }}
             />
           );

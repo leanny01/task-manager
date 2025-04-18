@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import styled from 'styled-components';
 import { Task, CreateTaskInput, TaskStatus, TaskPriority } from '../task/types/task';
 import { ProjectPriority, ProjectStatus } from '../project/types/project';
 import TaskList from '../task/list/TaskList';
@@ -13,6 +12,8 @@ import { projectService } from '../project/services/projectService';
 import { toast } from 'react-toastify';
 import ProjectList from '../project/list/ProjectList';
 import { useProjects } from '../project/hooks/useProjects';
+import SyncStatus from '../calendar/components/SyncStatus';
+import { ListIcon, TodayIcon, UpcomingIcon, CheckCircleIcon } from '../shared/components/Icons';
 import {
   AppContainer,
   Sidebar,
@@ -23,7 +24,8 @@ import {
   Header,
   SearchBar,
   UserProfile,
-  AddTaskInput,
+  AddTaskInputContainer,
+  AddButton,
   TaskContainer,
   ErrorMessage,
   Section,
@@ -31,6 +33,57 @@ import {
   LoadingState,
   EmptyState
 } from './Home.styles';
+import styled from 'styled-components';
+
+const NavBadge = styled.span`
+  background: ${props => props.theme.colors.background.light};
+  color: ${props => props.theme.colors.text.secondary};
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  margin-left: auto;
+`;
+
+const NavItemContent = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+`;
+
+const NavToggle = styled.button<{ $isActive: boolean }>`
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  color: ${props => props.theme.colors.text.primary};
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.theme.colors.hover};
+  }
+
+  &.active {
+    background: ${props => props.theme.colors.primary};
+    color: white;
+
+    ${NavBadge} {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+  }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
 
 export default function Home() {
   const { tasks, isLoading: isLoadingTasks, error: tasksError, loadTasks } = useListTasks();
@@ -40,7 +93,8 @@ export default function Home() {
   const { markComplete, isLoading: isCompleting, error: completeError } = useMarkCompleteTask();
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'upcoming' | 'completed'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'upcoming'>('all');
+  const [showCompleted, setShowCompleted] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -120,6 +174,31 @@ export default function Home() {
     setSearchQuery(e.target.value);
   };
 
+  // Calculate task counts
+  const taskCounts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return {
+      all: tasks.filter(task => !task.projectId).length,
+      today: tasks.filter(task => {
+        if (task.projectId) return false;
+        const taskDate = task.toDate ? new Date(task.toDate) : null;
+        if (!taskDate) return false;
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate.getTime() === today.getTime();
+      }).length,
+      upcoming: tasks.filter(task => {
+        if (task.projectId) return false;
+        return task.toDate && new Date(task.toDate) > today;
+      }).length,
+      completed: tasks.filter(task =>
+        !task.projectId && task.status === TaskStatus.COMPLETED
+      ).length
+    };
+  }, [tasks]);
+
+  // Filter items based on current view
   const filteredItems = useMemo(() => {
     let items = combinedItems;
 
@@ -141,21 +220,23 @@ export default function Home() {
     return items.filter(item => {
       const isProject = 'taskIds' in item;
       if (isProject) {
-        if (activeFilter === 'all') return true;
-        if (activeFilter === 'completed') return item.status === 'COMPLETED';
-        return true;
+        return true; // Always show projects
       } else {
-        const task = item;
+        const task = item as Task;
+        const isCompleted = task.status === TaskStatus.COMPLETED;
+
+        // If task is completed, only show if showCompleted is true
+        if (isCompleted && !showCompleted) return false;
+
         switch (activeFilter) {
-          case 'completed':
-            return task.status === TaskStatus.COMPLETED;
-          case 'today':
+          case 'today': {
             const today = new Date();
             const taskDate = task.toDate ? new Date(task.toDate) : null;
             return taskDate &&
               taskDate.getDate() === today.getDate() &&
               taskDate.getMonth() === today.getMonth() &&
               taskDate.getFullYear() === today.getFullYear();
+          }
           case 'upcoming':
             return task.toDate && new Date(task.toDate) > new Date();
           default:
@@ -163,27 +244,84 @@ export default function Home() {
         }
       }
     });
-  }, [combinedItems, searchQuery, activeFilter]);
+  }, [combinedItems, searchQuery, activeFilter, showCompleted]);
+
+  const toggleShowCompleted = () => {
+    setShowCompleted(!showCompleted);
+  };
 
   const isLoading = isLoadingTasks || isLoadingProjects || isCreating || isEditing || isCompleting;
   const error = tasksError || projectsError || createError || editError || completeError;
+
+  const handleAddTaskClick = () => {
+    if (newTaskTitle.trim()) {
+      createTask({
+        title: newTaskTitle.trim(),
+        priority: TaskPriority.MEDIUM,
+      }).then(() => {
+        setNewTaskTitle('');
+        loadTasks();
+      }).catch((error) => {
+        console.error('Failed to create task:', error);
+      });
+    }
+  };
 
   return (
     <AppContainer>
       <Sidebar>
         <Logo>TidyTasks</Logo>
         <NavList>
-          <NavItem active={activeFilter === 'all'} onClick={() => setActiveFilter('all')}>
-            ○ All
+          <NavItem>
+            <NavToggle
+              className={activeFilter === 'all' ? 'active' : ''}
+              onClick={() => setActiveFilter('all')}
+              $isActive={activeFilter === 'all'}
+            >
+              <NavItemContent>
+                <ListIcon size={16} />
+                <span>All</span>
+                <NavBadge>{taskCounts.all}</NavBadge>
+              </NavItemContent>
+            </NavToggle>
           </NavItem>
-          <NavItem active={activeFilter === 'today'} onClick={() => setActiveFilter('today')}>
-            📅 Today
+          <NavItem>
+            <NavToggle
+              className={activeFilter === 'today' ? 'active' : ''}
+              onClick={() => setActiveFilter('today')}
+              $isActive={activeFilter === 'today'}
+            >
+              <NavItemContent>
+                <TodayIcon size={16} />
+                <span>Today</span>
+                <NavBadge>{taskCounts.today}</NavBadge>
+              </NavItemContent>
+            </NavToggle>
           </NavItem>
-          <NavItem active={activeFilter === 'upcoming'} onClick={() => setActiveFilter('upcoming')}>
-            📆 Upcoming
+          <NavItem>
+            <NavToggle
+              className={activeFilter === 'upcoming' ? 'active' : ''}
+              onClick={() => setActiveFilter('upcoming')}
+              $isActive={activeFilter === 'upcoming'}
+            >
+              <NavItemContent>
+                <UpcomingIcon size={16} />
+                <span>Upcoming</span>
+                <NavBadge>{taskCounts.upcoming}</NavBadge>
+              </NavItemContent>
+            </NavToggle>
           </NavItem>
-          <NavItem active={activeFilter === 'completed'} onClick={() => setActiveFilter('completed')}>
-            ✓ Completed
+          <NavItem>
+            <NavToggle
+              onClick={toggleShowCompleted}
+              $isActive={showCompleted}
+            >
+              <NavItemContent>
+                <CheckCircleIcon size={16} />
+                <span>Completed</span>
+                <NavBadge>{taskCounts.completed}</NavBadge>
+              </NavItemContent>
+            </NavToggle>
           </NavItem>
         </NavList>
       </Sidebar>
@@ -198,21 +336,33 @@ export default function Home() {
               onChange={handleSearch}
             />
           </SearchBar>
-          <UserProfile>
-            <img src="/default-avatar.png" alt="User profile" />
-          </UserProfile>
+          <HeaderActions>
+            <SyncStatus />
+            <UserProfile>
+              <img src="/default-avatar.png" alt="User profile" />
+            </UserProfile>
+          </HeaderActions>
         </Header>
 
         <TaskContainer>
-          <AddTaskInput>
+          <AddTaskInputContainer>
             <input
               type="text"
-              placeholder="Add a task"
+              placeholder="Type a task name and press Enter or click +"
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               onKeyPress={handleAddTask}
             />
-          </AddTaskInput>
+            <AddButton
+              onClick={handleAddTaskClick}
+              title="Add task"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </AddButton>
+          </AddTaskInputContainer>
 
           {isLoading ? (
             <LoadingState>Loading...</LoadingState>

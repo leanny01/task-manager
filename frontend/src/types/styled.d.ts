@@ -6,11 +6,17 @@ declare module "styled-components" {
       primary: string;
       primaryHover: string;
       secondary: string;
+      secondaryHover: string;
+      hover: string;
       border: string;
       error: string;
       errorLight: string;
       success: string;
       successLight: string;
+      background: {
+        white: string;
+        light: string;
+      };
       text: {
         primary: string;
         secondary: string;
@@ -21,7 +27,6 @@ declare module "styled-components" {
       sm: string;
       md: string;
       lg: string;
-      xl: string;
     };
     spacing: {
       xs: string;
@@ -34,12 +39,12 @@ declare module "styled-components" {
       sm: string;
       md: string;
       lg: string;
-      xl: string;
     };
     shadows: {
       sm: string;
       md: string;
       lg: string;
+      xl: string;
     };
   }
 }

@@ -23,12 +23,15 @@ export interface TaskMeta {
 }
 
 export interface TaskBase {
+  id: string;
   title: string;
   description?: string;
-  priority: TaskPriority;
   status: TaskStatus;
+  priority: TaskPriority;
   fromDate?: string;
   toDate?: string;
+  completedAt?: string;
+  calendarEventId?: string;
 }
 
 export interface Task extends TaskBase, TaskMeta {}

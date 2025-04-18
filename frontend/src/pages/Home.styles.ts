@@ -26,7 +26,7 @@ export const NavList = styled.ul`
   margin: 0;
 `;
 
-export const NavItem = styled.li<{ active?: boolean }>`
+export const NavItem = styled.li`
   padding: 0.75rem 1rem;
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
@@ -34,9 +34,12 @@ export const NavItem = styled.li<{ active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: ${(props) =>
-    props.active ? props.theme.colors.secondary : "transparent"};
+  background: transparent;
   color: ${(props) => props.theme.colors.text.primary};
+
+  &.active {
+    background: ${(props) => props.theme.colors.secondary};
+  }
 
   &:hover {
     background: ${(props) => props.theme.colors.secondary};
@@ -152,4 +155,56 @@ export const EmptyState = styled.div`
   text-align: center;
   color: ${(props) => props.theme.colors.text.light};
   padding: 2rem 0;
+`;
+
+export const AddTaskInputContainer = styled.div`
+  position: relative;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  background: ${(props) => props.theme.colors.background.white};
+  border: 2px solid ${(props) => props.theme.colors.border};
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+
+  &:focus-within {
+    border-color: ${(props) => props.theme.colors.primary};
+    box-shadow: 0 0 0 3px ${(props) => `${props.theme.colors.primary}15`};
+  }
+
+  input {
+    flex: 1;
+    padding: 0.875rem 1rem;
+    border: none;
+    background: none;
+    font-size: 1rem;
+    color: ${(props) => props.theme.colors.text.primary};
+    outline: none;
+
+    &::placeholder {
+      color: ${(props) => props.theme.colors.text.secondary};
+    }
+  }
+`;
+
+export const AddButton = styled.button`
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  color: ${(props) => props.theme.colors.text.secondary};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${(props) => props.theme.colors.primary};
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 `;

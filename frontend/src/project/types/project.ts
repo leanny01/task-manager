@@ -23,6 +23,7 @@ export interface Project {
   updatedAt: string;
   completedAt?: string;
   dueDate?: string;
+  calendarEventId?: string;
 }
 
 export interface CreateProjectInput {

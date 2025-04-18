@@ -4,6 +4,8 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Home from './pages/Home'
 import ProjectDetails from './project/pages/ProjectDetails'
+import SyncStatus from './calendar/components/SyncStatus'
+import { ErrorBoundary } from './shared/components/ErrorBoundary'
 
 export default function App() {
     return (
@@ -12,8 +14,10 @@ export default function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/projects/:projectId" element={<ProjectDetails />} />
-                {/* Add more routes here as needed */}
             </Routes>
+            <ErrorBoundary>
+                <SyncStatus />
+            </ErrorBoundary>
         </Router>
     )
 } 

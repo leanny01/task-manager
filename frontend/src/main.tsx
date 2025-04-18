@@ -1,6 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { ThemeProvider } from 'styled-components'
+import { CalendarProvider } from './calendar/context/CalendarContext'
+import SyncStatus from './calendar/components/SyncStatus'
+
 import App from './App'
 import './index.css'
 import './styles/theme'
@@ -13,6 +16,10 @@ const theme = {
         secondaryHover: '#f1f5f9',
         hover: '#f8fafc',
         border: '#e5e7eb',
+        error: '#dc2626',
+        errorLight: '#fee2e2',
+        success: '#059669',
+        successLight: '#d1fae5',
         background: {
             white: '#ffffff',
             light: '#f8fafc',
@@ -51,7 +58,9 @@ const theme = {
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <ThemeProvider theme={theme}>
-            <App />
+            <CalendarProvider>
+                <App />
+            </CalendarProvider>
         </ThemeProvider>
     </React.StrictMode>,
 ) 
