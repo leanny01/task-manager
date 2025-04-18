@@ -1,107 +1,125 @@
-import { Task, CreateTaskInput, UpdateTaskInput } from "../types/task";
-import { TaskStatus, TaskPriority } from "../types/enums";
+import { Task, CreateTaskInput, TaskStatus } from "../types/task";
 import { taskRepository } from "../repositories/taskRepository";
 import { v4 as uuidv4 } from "uuid";
 
-class TaskService {
-  private tasks: Task[] = [];
-  private nextId = 1;
+// Query methods
+export const taskService = {
+  getAll: (): Task[] => {
+    return taskRepository.getAll();
+  },
 
-  async getAll(): Promise<Task[]> {
-    try {
-      return taskRepository.getAll();
-    } catch (error) {
-      throw new Error("Failed to fetch tasks");
+  getById: (id: string): Task | undefined => {
+    const tasks = taskRepository.getAll();
+    return tasks.find((task) => task.id === id);
+  },
+
+  getByStatus: (status: TaskStatus): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => task.status === status);
+  },
+
+  getByDate: (date: Date): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => {
+      const taskDate = new Date(task.createdAt);
+      return taskDate.toDateString() === date.toDateString();
+    });
+  },
+
+  getCompleted: (): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => task.status === TaskStatus.COMPLETED);
+  },
+
+  getPending: (): Task[] => {
+    const tasks = taskRepository.getAll();
+    return tasks.filter((task) => task.status === TaskStatus.PENDING);
+  },
+
+  // Command methods
+  create: (input: CreateTaskInput): Task => {
+    const newTask: Task = {
+      id: uuidv4(),
+      ...input,
+      status: input.status || TaskStatus.PENDING,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 1,
+    };
+
+    const tasks = taskRepository.getAll();
+    taskRepository.save([...tasks, newTask]);
+    return newTask;
+  },
+
+  update: (id: string, updates: Partial<Task>): Task => {
+    const tasks = taskRepository.getAll();
+    const taskIndex = tasks.findIndex((task) => task.id === id);
+
+    if (taskIndex === -1) {
+      throw new Error("Task not found");
     }
-  }
 
-  async getById(id: string): Promise<Task> {
-    try {
-      const tasks = taskRepository.getAll();
-      const task = tasks.find((t) => t.id === id);
-      if (!task) {
-        throw new Error("Task not found");
-      }
-      return task;
-    } catch (error) {
-      throw new Error("Failed to fetch task");
-    }
-  }
+    const currentTask = tasks[taskIndex];
+    const updatedTask = {
+      ...currentTask,
+      ...updates,
+      updatedAt: new Date(),
+      version: currentTask.version + 1,
+      completedAt:
+        updates.status === TaskStatus.COMPLETED
+          ? new Date()
+          : currentTask.completedAt,
+      archivedAt:
+        updates.status === TaskStatus.ARCHIVED
+          ? new Date()
+          : currentTask.archivedAt,
+    };
 
-  async create(taskInput: CreateTaskInput): Promise<Task> {
-    try {
-      const tasks = taskRepository.getAll();
-      const newTask: Task = {
-        id: uuidv4(),
-        ...taskInput,
-        status: TaskStatus.PENDING,
-        priority: taskInput.priority || TaskPriority.MEDIUM,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+    const newTasks = [...tasks];
+    newTasks[taskIndex] = updatedTask;
+    taskRepository.save(newTasks);
 
-      taskRepository.save([...tasks, newTask]);
-      return newTask;
-    } catch (error) {
-      throw new Error("Failed to create task");
-    }
-  }
+    return updatedTask;
+  },
 
-  async update(id: string, updates: UpdateTaskInput): Promise<Task> {
-    try {
-      const tasks = taskRepository.getAll();
-      const taskIndex = tasks.findIndex((t) => t.id === id);
+  delete: (id: string): void => {
+    const tasks = taskRepository.getAll();
+    const filteredTasks = tasks.filter((task) => task.id !== id);
+    taskRepository.save(filteredTasks);
+  },
 
-      if (taskIndex === -1) {
-        throw new Error(`Task with id ${id} not found`);
-      }
-
-      const updatedTask: Task = {
-        ...tasks[taskIndex],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-
-      tasks[taskIndex] = updatedTask;
-      taskRepository.save(tasks);
-      return updatedTask;
-    } catch (error) {
-      throw new Error("Failed to update task");
-    }
-  }
-
-  async delete(id: string): Promise<void> {
-    try {
-      const tasks = taskRepository.getAll();
-      const filteredTasks = tasks.filter((t) => t.id !== id);
-
-      if (filteredTasks.length === tasks.length) {
-        throw new Error(`Task with id ${id} not found`);
-      }
-
-      taskRepository.save(filteredTasks);
-    } catch (error) {
-      throw new Error("Failed to delete task");
-    }
-  }
-
-  async markComplete(id: string): Promise<Task> {
-    return this.update(id, {
+  markComplete: (id: string): Task => {
+    return taskService.update(id, {
       status: TaskStatus.COMPLETED,
-      completedAt: new Date().toISOString(),
+      completedAt: new Date(),
     });
-  }
+  },
 
-  async markInProgress(id: string): Promise<Task> {
-    return this.update(id, {
-      status: TaskStatus.IN_PROGRESS,
+  markIncomplete: (id: string): Task => {
+    return taskService.update(id, {
+      status: TaskStatus.PENDING,
+      completedAt: undefined,
     });
-  }
+  },
 
-  // Helper method for testing
-  async resetStorage(): Promise<void> {
-    taskRepository.save([]);
-  }
-}
+  archive: (id: string): Task => {
+    return taskService.update(id, {
+      status: TaskStatus.ARCHIVED,
+      archivedAt: new Date(),
+    });
+  },
 
-export const taskService = new TaskService();
+  toggleComplete: (id: string): Task => {
+    const tasks = taskRepository.getAll();
+    const task = tasks.find((t) => t.id === id);
+
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    return task.status === TaskStatus.COMPLETED
+      ? taskService.markIncomplete(id)
+      : taskService.markComplete(id);
+  },
+};
