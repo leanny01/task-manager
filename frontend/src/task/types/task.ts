@@ -1,45 +1,36 @@
-import { TaskStatus, TaskPriority } from "./enums";
+export enum TaskPriority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+}
+
+export enum TaskStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  ARCHIVED = "ARCHIVED",
+}
+
+export interface TaskMeta {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+  archivedAt?: Date;
+  version: number;
+  projectId?: string;
+  tags?: string[];
+}
 
 export interface TaskBase {
-  id: string;
   title: string;
   description?: string;
-  status: TaskStatus;
   priority: TaskPriority;
-  projectId?: string;
-  fromDate?: string;
-  toDate?: string;
-  completedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  status: TaskStatus;
+  dueDate?: Date;
 }
 
-export type Task = TaskBase;
-
-export interface CreateTaskInput {
-  title: string;
-  description?: string;
-  priority?: TaskPriority;
-  projectId?: string;
-  fromDate?: string;
-  toDate?: string;
-}
-
-export interface UpdateTaskInput {
-  title?: string;
-  description?: string;
+export interface CreateTaskInput extends Omit<TaskBase, "status"> {
   status?: TaskStatus;
-  priority?: TaskPriority;
-  fromDate?: string;
-  toDate?: string;
-  completedAt?: string;
-  projectId?: string;
 }
 
-export interface ListItemData extends TaskBase {
-  subtitle?: React.ReactNode;
-  actions?: Array<{
-    label: string;
-    onClick: () => void;
-  }>;
-}
+export interface Task extends TaskBase, TaskMeta {}

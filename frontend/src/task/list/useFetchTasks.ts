@@ -8,17 +8,14 @@ export const useFetchTasks = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const loadedTasks = await taskService.getAll(); // TODO: add loading indicator
-        setTasks(loadedTasks);
-      } catch (err) {
-        setError("Failed to load tasks");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTasks();
+    try {
+      const loadedTasks = taskService.getAll(); // TODO: add loading indicator
+      setTasks(loadedTasks);
+    } catch (err) {
+      setError("Failed to load tasks");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   return {

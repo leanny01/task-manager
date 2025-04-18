@@ -80,7 +80,7 @@ export default function AddTaskForm({ onSubmit, isLoading }: AddTaskFormProps) {
     if (!title.trim()) return;
 
     try {
-      await onSubmit({
+      const newTask = await onSubmit({
         title: title.trim(),
         description: description.trim(),
         completed: false,
