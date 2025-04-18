@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { taskService } from "../services/taskService";
-
+import { useCalendar } from "../../calendar/context/CalendarContext";
+import { Task } from "../types/task";
+import { toast } from "react-toastify";
 export const useDeleteTask = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const deleteTask = async (id: string) => {
+  const { deleteTaskEvent } = useCalendar();
+  const deleteTask = async (task: Task) => {
     try {
       setIsLoading(true);
       setError(null);
-      taskService.delete(id);
+      await taskService.delete(task.id);
+      await deleteTaskEvent(task);
     } catch (err) {
       setError("Failed to delete task");
       console.error(err);
