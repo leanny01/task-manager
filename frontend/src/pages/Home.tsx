@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Task, TaskStatus, TaskPriority } from '../task/types/task';
+import { Task } from '../task/types/task';
+import { TaskStatus, TaskPriority } from '../task/types/enums';
 import { useCreateTask } from '../task/create/useCreateTask';
 import { useEditTask } from '../task/edit/useEditTask';
 import { useListTasks } from '../task/list/useListTasks';
@@ -10,6 +11,7 @@ import SyncStatus from '../calendar/components/SyncStatus';
 import { ListIcon, TodayIcon, UpcomingIcon, CheckCircleIcon, PlusIcon, FolderIcon } from '../shared/components/Icons';
 import AllTasksView from '../task/views/AllTasksView';
 import TodayTasksView from '../task/views/TodayTasksView';
+import UpcomingTasksView from '../task/views/UpcomingTasksView';
 import CompletedTasksView from '../task/views/CompletedTasksView';
 import ProjectsView from '../task/views/ProjectsView';
 import EditTaskModal from '../task/edit/EditTaskModal';
@@ -90,7 +92,7 @@ export default function Home() {
   const { markComplete, isLoading: isCompleting, error: completeError } = useMarkCompleteTask();
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'completed' | 'projects'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'upcoming' | 'completed' | 'projects'>('all');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -172,6 +174,14 @@ export default function Home() {
       taskDate.setHours(0, 0, 0, 0);
       return taskDate.getTime() === today.getTime();
     }).length,
+    upcoming: tasks.filter(task => {
+      const taskDate = task.toDate ? new Date(task.toDate) : null;
+      if (!taskDate) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate.getTime() > today.getTime();
+    }).length,
     completed: tasks.filter(task => task.status === TaskStatus.COMPLETED).length,
     projects: projects.length
   };
@@ -193,6 +203,8 @@ export default function Home() {
     switch (activeFilter) {
       case 'today':
         return <TodayTasksView {...commonProps} />;
+      case 'upcoming':
+        return <UpcomingTasksView {...commonProps} />;
       case 'completed':
         return <CompletedTasksView {...commonProps} />;
       case 'projects':
@@ -234,6 +246,19 @@ export default function Home() {
                 <TodayIcon size={16} />
                 <span>Today</span>
                 <NavBadge>{taskCounts.today}</NavBadge>
+              </NavItemContent>
+            </NavToggle>
+          </NavItem>
+          <NavItem>
+            <NavToggle
+              className={activeFilter === 'upcoming' ? 'active' : ''}
+              onClick={() => setActiveFilter('upcoming')}
+              $isActive={activeFilter === 'upcoming'}
+            >
+              <NavItemContent>
+                <UpcomingIcon size={16} />
+                <span>Upcoming</span>
+                <NavBadge>{taskCounts.upcoming}</NavBadge>
               </NavItemContent>
             </NavToggle>
           </NavItem>

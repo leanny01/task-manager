@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import moment from 'moment';
-import { Task, TaskPriority } from '../types/task';
+import { Task } from '../types/task';
+import { TaskPriority } from '../types/enums';
 import { Input } from '../shared/components/forms/Input';
 import { TextArea } from '../shared/components/forms/TextArea';
 import { Button } from '../shared/components/buttons/Button';

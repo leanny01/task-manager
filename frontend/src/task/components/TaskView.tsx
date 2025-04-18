@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
 import { Task } from '../types/task';
+import { TaskStatus } from '../types/enums';
 import { Project } from '../../project/types/project';
 import ListItem from '../../shared/components/ListItem';
 import { FolderIcon } from '../../shared/components/Icons';
@@ -12,14 +13,20 @@ const List = styled.ul`
 `;
 
 const ProjectIndicator = styled.div`
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: ${props => props.theme.colors.text.secondary};
+  font-size: 0.875rem;
   padding: 0.25rem 0.5rem;
   background: ${props => props.theme.colors.background.light};
   border-radius: 0.375rem;
-  font-size: 0.75rem;
-  color: ${props => props.theme.colors.text.secondary};
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${props => props.theme.colors.hover};
+    color: ${props => props.theme.colors.text.primary};
+  }
 `;
 
 interface TaskViewProps {
@@ -39,71 +46,55 @@ export default function TaskView({
     onDeleteTask,
     onEditTask,
 }: TaskViewProps) {
-    // Get all tasks, including those within projects
-    const getAllTasks = () => {
-        const allTasks: Task[] = [...tasks];
-        projects.forEach(project => {
-            const projectTaskList = projectTasks[project.id] || [];
-            projectTaskList.forEach(task => {
-                allTasks.push({
-                    ...task,
-                    projectName: project.title // Add project name for display
-                });
-            });
-        });
-        return allTasks;
-    };
+    // Create a map of project IDs to project names for quick lookup
+    const projectMap = useMemo(() => {
+        return projects.reduce((acc, project) => {
+            acc[project.id] = project.title;
+            return acc;
+        }, {} as Record<string, string>);
+    }, [projects]);
 
-    const handleTaskAction = (task: Task, action: string) => {
-        switch (action) {
-            case 'toggle':
-                onToggleComplete(task.id);
-                break;
-            case 'edit':
-                onEditTask(task);
-                break;
-            case 'delete':
-                onDeleteTask(task.id);
-                break;
-        }
-    };
-
-    const renderProjectIndicator = (task: Task) => {
-        if (!task.projectName) return null;
-        return (
-            <ProjectIndicator>
-                <FolderIcon size={12} />
-                <span>{task.projectName}</span>
-            </ProjectIndicator>
-        );
+    // Find which project a task belongs to
+    const getProjectName = (task: Task): string | undefined => {
+        if (!task.projectId) return undefined;
+        return projectMap[task.projectId];
     };
 
     return (
         <List>
-            {getAllTasks().map(task => (
-                <ListItem
-                    key={task.id}
-                    variant="task"
-                    data={{
-                        ...task,
-                        subtitle: renderProjectIndicator(task),
-                        actions: [
-                            {
-                                label: 'Toggle Complete',
-                                onClick: () => handleTaskAction(task, 'toggle'),
-                            },
-                            {
-                                label: 'Edit',
-                                onClick: () => handleTaskAction(task, 'edit'),
-                            },
-                            {
-                                label: 'Delete',
-                                onClick: () => handleTaskAction(task, 'delete'),
-                            }
-                        ],
-                    }}
-                />
-            ))}
+            {tasks.map(task => {
+                const projectName = getProjectName(task);
+                return (
+                    <ListItem
+                        key={task.id}
+                        variant="task"
+                        data={{
+                            ...task,
+                            subtitle: projectName ? (
+                                <ProjectIndicator>
+                                    <FolderIcon size={12} />
+                                    {projectName}
+                                </ProjectIndicator>
+                            ) : undefined,
+                            status: task.status,
+                            actions: [
+                                {
+                                    label: task.status === TaskStatus.COMPLETED ? 'Mark Incomplete' : 'Mark Complete',
+                                    onClick: () => onToggleComplete(task.id),
+                                },
+                                {
+                                    label: 'Edit',
+                                    onClick: () => onEditTask(task),
+                                },
+                                {
+                                    label: 'Delete',
+                                    onClick: () => onDeleteTask(task.id),
+                                },
+                            ],
+                        }}
+                    />
+                );
+            })}
         </List>
     );
 } 

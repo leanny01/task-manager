@@ -3,20 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import moment from 'moment';
 import { Project, ProjectStatus } from '../types/project';
-import { Task, TaskStatus, CreateTaskInput, TaskPriority } from '../../task/types/task';
+import { Task, CreateTaskInput } from '../../task/types/task';
+import { TaskStatus, TaskPriority } from '../../task/types/enums';
 import { projectService } from '../services/projectService';
 import { taskService } from '../../task/services/taskService';
 import { toast } from 'react-toastify';
-import ListItem, {
-  ListItemContent,
-  ListItemHeader,
-  ListItemTitle,
-  ListItemDescription,
-  ListItemMeta,
-  ListItemBadge,
-  ListItemActions,
-  ListItemAction
-} from '../../shared/components/ListItem';
+import ListItem from '../../shared/components/ListItem';
 import EditTaskModal from '../../task/edit/EditTaskModal';
 import { useEditTask } from '../../task/edit/useEditTask';
 import { useDeleteTask } from '../../task/delete/useDeleteTask';

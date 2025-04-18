@@ -12,19 +12,20 @@ export enum ProjectPriority {
   HIGH = "HIGH",
 }
 
-export interface Project {
+export interface ProjectBase {
   id: string;
   title: string;
   description?: string;
   status: ProjectStatus;
   priority: ProjectPriority;
   taskIds: string[];
+  dueDate?: string;
+  completedAt?: string;
   createdAt: string;
   updatedAt: string;
-  completedAt?: string;
-  dueDate?: string;
-  calendarEventId?: string;
 }
+
+export type Project = ProjectBase;
 
 export interface CreateProjectInput {
   title: string;
@@ -38,7 +39,9 @@ export interface UpdateProjectInput {
   description?: string;
   status?: ProjectStatus;
   priority?: ProjectPriority;
+  taskIds?: string[];
   dueDate?: string;
+  completedAt?: string;
 }
 
 export interface ConvertTaskToProjectInput {

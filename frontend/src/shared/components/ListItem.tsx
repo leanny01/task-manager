@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import moment from 'moment';
-import { TaskStatus } from '../../task/types/task';
+import { TaskStatus } from '../../task/types/enums';
+
 import { CheckIcon, EditIcon, DeleteIcon, FolderIcon, CalendarIcon, DotsVerticalIcon } from './Icons';
 import Timeline from './Timeline';
 
@@ -337,10 +338,11 @@ const MenuItem = styled.button`
   }
 `;
 
-interface ListItemData {
+export interface ListItemData {
     id: string;
     title: string;
     description?: string;
+    subtitle?: React.ReactNode;
     status?: string;
     dueDate?: string;
     completedAt?: string;

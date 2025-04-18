@@ -1,13 +1,12 @@
-import {
-  Task,
-  CreateTaskInput,
-  UpdateTaskInput,
-  TaskStatus,
-} from "../types/task";
+import { Task, CreateTaskInput, UpdateTaskInput } from "../types/task";
+import { TaskStatus, TaskPriority } from "../types/enums";
 import { taskRepository } from "../repositories/taskRepository";
 import { v4 as uuidv4 } from "uuid";
 
 class TaskService {
+  private tasks: Task[] = [];
+  private nextId = 1;
+
   async getAll(): Promise<Task[]> {
     try {
       return taskRepository.getAll();
@@ -36,9 +35,9 @@ class TaskService {
         id: uuidv4(),
         ...taskInput,
         status: TaskStatus.PENDING,
+        priority: taskInput.priority || TaskPriority.MEDIUM,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        version: 1,
       };
 
       taskRepository.save([...tasks, newTask]);
@@ -54,18 +53,13 @@ class TaskService {
       const taskIndex = tasks.findIndex((t) => t.id === id);
 
       if (taskIndex === -1) {
-        throw new Error("Task not found");
+        throw new Error(`Task with id ${id} not found`);
       }
 
       const updatedTask: Task = {
         ...tasks[taskIndex],
         ...updates,
         updatedAt: new Date().toISOString(),
-        version: tasks[taskIndex].version + 1,
-        completedAt:
-          updates.status === TaskStatus.COMPLETED
-            ? new Date().toISOString()
-            : tasks[taskIndex].completedAt,
       };
 
       tasks[taskIndex] = updatedTask;
@@ -82,7 +76,7 @@ class TaskService {
       const filteredTasks = tasks.filter((t) => t.id !== id);
 
       if (filteredTasks.length === tasks.length) {
-        throw new Error("Task not found");
+        throw new Error(`Task with id ${id} not found`);
       }
 
       taskRepository.save(filteredTasks);
@@ -101,12 +95,6 @@ class TaskService {
   async markInProgress(id: string): Promise<Task> {
     return this.update(id, {
       status: TaskStatus.IN_PROGRESS,
-    });
-  }
-
-  async archive(id: string): Promise<Task> {
-    return this.update(id, {
-      status: TaskStatus.ARCHIVED,
     });
   }
 

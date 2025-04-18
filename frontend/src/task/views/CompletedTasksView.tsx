@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import TaskView from '../components/TaskView';
-import { Task, TaskStatus } from '../types/task';
+import { Task } from '../types/task';
+import { TaskStatus } from '../types/enums';
 import { Project } from '../../project/types/project';
 
 interface CompletedTasksViewProps {

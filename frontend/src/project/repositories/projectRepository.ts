@@ -7,24 +7,27 @@ import {
 } from "../types/project";
 import { v4 as uuidv4 } from "uuid";
 
-export class ProjectRepository {
-  private readonly STORAGE_KEY = "projects";
+class ProjectRepository {
+  private readonly storageKey = "projects";
 
-  async getAll(): Promise<Project[]> {
-    const projectsJson = localStorage.getItem(this.STORAGE_KEY);
-    if (!projectsJson) return [];
-    return JSON.parse(projectsJson);
+  getAll(): Project[] {
+    const projectsJson = localStorage.getItem(this.storageKey);
+    return projectsJson ? JSON.parse(projectsJson) : [];
+  }
+
+  save(projects: Project[]): void {
+    localStorage.setItem(this.storageKey, JSON.stringify(projects));
   }
 
   async getById(id: string): Promise<Project | null> {
-    const projects = await this.getAll();
+    const projects = this.getAll();
     return projects.find((project) => project.id === id) || null;
   }
 
   async create(
     data: Omit<Project, "id" | "createdAt" | "updatedAt">
   ): Promise<Project> {
-    const projects = await this.getAll();
+    const projects = this.getAll();
     const newProject: Project = {
       ...data,
       id: uuidv4(),
@@ -33,12 +36,12 @@ export class ProjectRepository {
       updatedAt: new Date().toISOString(),
     };
     projects.push(newProject);
-    await this.saveAll(projects);
+    this.save(projects);
     return newProject;
   }
 
   async update(id: string, data: Partial<Project>): Promise<Project> {
-    const projects = await this.getAll();
+    const projects = this.getAll();
     const index = projects.findIndex((project) => project.id === id);
     if (index === -1) throw new Error(`Project with id ${id} not found`);
 
@@ -48,14 +51,14 @@ export class ProjectRepository {
       updatedAt: new Date().toISOString(),
     };
     projects[index] = updatedProject;
-    await this.saveAll(projects);
+    this.save(projects);
     return updatedProject;
   }
 
   async delete(id: string): Promise<void> {
-    const projects = await this.getAll();
+    const projects = this.getAll();
     const filteredProjects = projects.filter((project) => project.id !== id);
-    await this.saveAll(filteredProjects);
+    this.save(filteredProjects);
   }
 
   async addTaskToProject(projectId: string, taskId: string): Promise<Project> {
@@ -79,8 +82,6 @@ export class ProjectRepository {
     project.taskIds = project.taskIds.filter((id) => id !== taskId);
     return await this.update(projectId, { taskIds: project.taskIds });
   }
-
-  private async saveAll(projects: Project[]): Promise<void> {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(projects));
-  }
 }
+
+export const projectRepository = new ProjectRepository();

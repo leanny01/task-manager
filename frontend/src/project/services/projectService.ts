@@ -7,165 +7,104 @@ import {
 } from "../types/project";
 import { v4 as uuidv4 } from "uuid";
 import { taskService } from "../../task/services/taskService";
-import { Task, TaskPriority } from "../../task/types/task";
+import { Task } from "../../task/types/task";
+import { TaskPriority, TaskStatus } from "../../task/types/enums";
+import { projectRepository } from "../repositories/projectRepository";
 
 export class ProjectService {
   private storageKey = "projects";
 
   async getAll(): Promise<Project[]> {
     try {
-      const projectsJson = localStorage.getItem(this.storageKey);
-      return projectsJson ? JSON.parse(projectsJson) : [];
+      return projectRepository.getAll();
     } catch (error) {
-      console.error("Error getting projects:", error);
-      throw new Error("Failed to get projects");
+      throw new Error("Failed to fetch projects");
     }
   }
 
-  async getById(id: string): Promise<Project | null> {
+  async getById(id: string): Promise<Project> {
     try {
-      const projects = await this.getAll();
-      return projects.find((project) => project.id === id) || null;
+      const projects = projectRepository.getAll();
+      const project = projects.find((p) => p.id === id);
+      if (!project) {
+        throw new Error("Project not found");
+      }
+      return project;
     } catch (error) {
-      console.error("Error getting project:", error);
-      throw new Error("Failed to get project");
+      throw new Error("Failed to fetch project");
     }
   }
 
   async create(input: CreateProjectInput): Promise<Project> {
     try {
-      const projects = await this.getAll();
+      const projects = projectRepository.getAll();
       const newProject: Project = {
         id: uuidv4(),
-        title: input.title,
-        description: input.description,
+        ...input,
         status: ProjectStatus.ACTIVE,
         priority: input.priority || ProjectPriority.MEDIUM,
         taskIds: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        dueDate: input.dueDate,
       };
 
-      projects.push(newProject);
-      localStorage.setItem(this.storageKey, JSON.stringify(projects));
+      projectRepository.save([...projects, newProject]);
       return newProject;
     } catch (error) {
-      console.error("Error creating project:", error);
       throw new Error("Failed to create project");
     }
   }
 
-  async update(id: string, input: UpdateProjectInput): Promise<Project> {
+  async update(id: string, updates: UpdateProjectInput): Promise<Project> {
     try {
-      const projects = await this.getAll();
-      const projectIndex = projects.findIndex((project) => project.id === id);
+      const projects = projectRepository.getAll();
+      const projectIndex = projects.findIndex((p) => p.id === id);
 
       if (projectIndex === -1) {
-        throw new Error("Project not found");
+        throw new Error(`Project with id ${id} not found`);
       }
 
-      const updatedProject = {
+      const updatedProject: Project = {
         ...projects[projectIndex],
-        ...input,
+        ...updates,
         updatedAt: new Date().toISOString(),
       };
 
-      if (
-        input.status === ProjectStatus.COMPLETED &&
-        !updatedProject.completedAt
-      ) {
-        updatedProject.completedAt = new Date().toISOString();
-      }
-
       projects[projectIndex] = updatedProject;
-      localStorage.setItem(this.storageKey, JSON.stringify(projects));
+      projectRepository.save(projects);
       return updatedProject;
     } catch (error) {
-      console.error("Error updating project:", error);
       throw new Error("Failed to update project");
     }
   }
 
   async delete(id: string): Promise<void> {
     try {
-      const projects = await this.getAll();
-      const project = projects.find((p) => p.id === id);
+      const projects = projectRepository.getAll();
+      const filteredProjects = projects.filter((p) => p.id !== id);
 
-      if (project) {
-        // Update all associated tasks to remove project reference
-        for (const taskId of project.taskIds) {
-          try {
-            await taskService.update(taskId, { projectId: undefined });
-          } catch (error) {
-            console.warn(
-              `Failed to update task ${taskId} while deleting project`,
-              error
-            );
-          }
-        }
+      if (filteredProjects.length === projects.length) {
+        throw new Error(`Project with id ${id} not found`);
       }
 
-      const filteredProjects = projects.filter((project) => project.id !== id);
-      localStorage.setItem(this.storageKey, JSON.stringify(filteredProjects));
+      projectRepository.save(filteredProjects);
     } catch (error) {
-      console.error("Error deleting project:", error);
       throw new Error("Failed to delete project");
     }
   }
 
   async addTask(projectId: string, taskId: string): Promise<Project> {
-    try {
-      const projects = await this.getAll();
-      const projectIndex = projects.findIndex(
-        (project) => project.id === projectId
-      );
-
-      if (projectIndex === -1) {
-        throw new Error("Project not found");
-      }
-
-      if (!projects[projectIndex].taskIds.includes(taskId)) {
-        // Update the task's projectId
-        await taskService.update(taskId, { projectId });
-
-        projects[projectIndex].taskIds.push(taskId);
-        projects[projectIndex].updatedAt = new Date().toISOString();
-        localStorage.setItem(this.storageKey, JSON.stringify(projects));
-      }
-
-      return projects[projectIndex];
-    } catch (error) {
-      console.error("Error adding task to project:", error);
-      throw new Error("Failed to add task to project");
-    }
+    const project = await this.getById(projectId);
+    return this.update(projectId, {
+      taskIds: [...project.taskIds, taskId],
+    });
   }
 
   async removeTask(projectId: string, taskId: string): Promise<Project> {
-    try {
-      const projects = await this.getAll();
-      const projectIndex = projects.findIndex(
-        (project) => project.id === projectId
-      );
-
-      if (projectIndex === -1) {
-        throw new Error("Project not found");
-      }
-
-      // Remove project reference from task
-      await taskService.update(taskId, { projectId: undefined });
-
-      projects[projectIndex].taskIds = projects[projectIndex].taskIds.filter(
-        (id) => id !== taskId
-      );
-      projects[projectIndex].updatedAt = new Date().toISOString();
-      localStorage.setItem(this.storageKey, JSON.stringify(projects));
-
-      return projects[projectIndex];
-    } catch (error) {
-      console.error("Error removing task from project:", error);
-      throw new Error("Failed to remove task from project");
-    }
+    const project = await this.getById(projectId);
+    return this.update(projectId, {
+      taskIds: project.taskIds.filter((id) => id !== taskId),
+    });
   }
 
   private mapTaskPriorityToProjectPriority(
