@@ -1,12 +1,9 @@
 import React, { useMemo } from 'react';
 import TaskView from '../components/TaskView';
 import { Task } from '../types/task';
-import { Project } from '../../project/types/project';
 
 interface UpcomingTasksViewProps {
     tasks: Task[];
-    projects: Project[];
-    projectTasks: Record<string, Task[]>;
     onToggleComplete: (id: string) => void;
     onDeleteTask: (id: string) => void;
     onEditTask: (task: Task) => void;
@@ -14,8 +11,6 @@ interface UpcomingTasksViewProps {
 
 export default function UpcomingTasksView({
     tasks,
-    projects,
-    projectTasks,
     onToggleComplete,
     onDeleteTask,
     onEditTask,
@@ -32,26 +27,10 @@ export default function UpcomingTasksView({
         });
     }, [tasks]);
 
-    const upcomingProjects = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        return projects.filter(project => {
-            const tasks = projectTasks[project.id] || [];
-            return tasks.some(task => {
-                const taskDate = task.toDate ? new Date(task.toDate) : null;
-                if (!taskDate) return false;
-                taskDate.setHours(0, 0, 0, 0);
-                return taskDate.getTime() > today.getTime();
-            });
-        });
-    }, [projects, projectTasks]);
 
     return (
         <TaskView
             tasks={upcomingTasks}
-            projects={upcomingProjects}
-            projectTasks={projectTasks}
             onToggleComplete={onToggleComplete}
             onDeleteTask={onDeleteTask}
             onEditTask={onEditTask}

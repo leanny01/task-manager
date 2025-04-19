@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Task } from '../types/task';
-import { Project } from '../../project/types/project';
+import { Task } from '../../task/types/task';
+import { Project } from '../types/project';
 import ProjectGroup from '../../shared/components/ProjectGroup';
 
 const List = styled.ul`

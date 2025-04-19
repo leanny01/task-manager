@@ -1,5 +1,6 @@
 import {
   Project,
+  ProjectBase,
   ProjectStatus,
   ProjectPriority,
   CreateProjectInput,
@@ -14,7 +15,7 @@ import { projectRepository } from "../repositories/projectRepository";
 export class ProjectService {
   private storageKey = "projects";
 
-  async getAll(): Promise<Project[]> {
+  async getAll(): Promise<ProjectBase[]> {
     try {
       return projectRepository.getAll();
     } catch (error) {
@@ -22,7 +23,7 @@ export class ProjectService {
     }
   }
 
-  async getById(id: string): Promise<Project> {
+  async getById(id: string): Promise<ProjectBase> {
     try {
       const projects = projectRepository.getAll();
       const project = projects.find((p) => p.id === id);
@@ -35,10 +36,45 @@ export class ProjectService {
     }
   }
 
-  async create(input: CreateProjectInput): Promise<Project> {
+  async getTasksForProject(projectId: string): Promise<Task[]> {
+    try {
+      const project = await this.getById(projectId);
+      const allTasks = await taskService.getAll();
+      return project.taskIds
+        .map((taskId) => allTasks.find((task) => task.id === taskId))
+        .filter((task): task is Task => task !== undefined);
+    } catch (error) {
+      throw new Error("Failed to fetch project tasks");
+    }
+  }
+
+  async getTasksForProjects(
+    projectIds: string[]
+  ): Promise<Record<string, Task[]>> {
+    try {
+      const allTasks = await taskService.getAll();
+      const projects = await this.getAll();
+      const result: Record<string, Task[]> = {};
+
+      for (const projectId of projectIds) {
+        const project = projects.find((p) => p.id === projectId);
+        if (project) {
+          result[projectId] = project.taskIds
+            .map((taskId) => allTasks.find((task) => task.id === taskId))
+            .filter((task): task is Task => task !== undefined);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      throw new Error("Failed to fetch projects tasks");
+    }
+  }
+
+  async create(input: CreateProjectInput): Promise<ProjectBase> {
     try {
       const projects = projectRepository.getAll();
-      const newProject: Project = {
+      const newProject: ProjectBase = {
         id: uuidv4(),
         ...input,
         status: ProjectStatus.ACTIVE,
@@ -55,7 +91,7 @@ export class ProjectService {
     }
   }
 
-  async update(id: string, updates: UpdateProjectInput): Promise<Project> {
+  async update(id: string, updates: UpdateProjectInput): Promise<ProjectBase> {
     try {
       const projects = projectRepository.getAll();
       const projectIndex = projects.findIndex((p) => p.id === id);
@@ -64,7 +100,7 @@ export class ProjectService {
         throw new Error(`Project with id ${id} not found`);
       }
 
-      const updatedProject: Project = {
+      const updatedProject: ProjectBase = {
         ...projects[projectIndex],
         ...updates,
         updatedAt: new Date().toISOString(),
@@ -93,14 +129,14 @@ export class ProjectService {
     }
   }
 
-  async addTask(projectId: string, taskId: string): Promise<Project> {
+  async addTask(projectId: string, taskId: string): Promise<ProjectBase> {
     const project = await this.getById(projectId);
     return this.update(projectId, {
       taskIds: [...project.taskIds, taskId],
     });
   }
 
-  async removeTask(projectId: string, taskId: string): Promise<Project> {
+  async removeTask(projectId: string, taskId: string): Promise<ProjectBase> {
     const project = await this.getById(projectId);
     return this.update(projectId, {
       taskIds: project.taskIds.filter((id) => id !== taskId),
@@ -122,7 +158,7 @@ export class ProjectService {
     }
   }
 
-  async promoteTaskToProject(task: Task): Promise<Project> {
+  async promoteTaskToProject(task: Task): Promise<ProjectBase> {
     try {
       // Create a new project from the task
       const newProject = await this.create({
@@ -132,7 +168,12 @@ export class ProjectService {
         dueDate: task.toDate,
       });
 
-      // Add the task to the project
+      // If the task is already in a project, remove it from that project first
+      if (task.projectId) {
+        await this.removeTask(task.projectId, task.id);
+      }
+
+      // Add the task to the new project
       await this.addTask(newProject.id, task.id);
 
       return newProject;

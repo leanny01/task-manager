@@ -12,48 +12,53 @@ const theme = {
     colors: {
         primary: '#2563eb',
         primaryHover: '#1d4ed8',
+        primaryLight: '#dbeafe',
         secondary: '#f8fafc',
         secondaryHover: '#f1f5f9',
-        hover: '#f8fafc',
-        border: '#e5e7eb',
+        hover: '#f1f5f9',
+        border: '#e2e8f0',
         error: '#dc2626',
         errorLight: '#fee2e2',
-        success: '#059669',
-        successLight: '#d1fae5',
+        success: '#16a34a',
+        successLight: '#dcfce7',
         background: {
             white: '#ffffff',
             light: '#f8fafc',
+            gray: '#f8fafc',
+            dark: '#1e293b'
         },
         text: {
-            primary: '#111827',
-            secondary: '#4b5563',
-            light: '#6b7280'
-        },
-        spacing: {
-            xs: '4px',
-            sm: '8px',
-            md: '16px',
-            lg: '24px',
-            xl: '32px'
-        },
-        borderRadius: {
-            sm: '4px',
-            md: '8px',
-            lg: '16px'
-        },
-        shadows: {
-            sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-            md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-            xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            primary: '#1e293b',
+            secondary: '#64748b',
+            light: '#94a3b8'
         }
+    },
+    spacing: {
+        xs: '0.25rem',
+        sm: '0.5rem',
+        md: '1rem',
+        lg: '1.5rem',
+        xl: '2rem'
+    },
+    borderRadius: {
+        sm: '0.25rem',
+        md: '0.375rem',
+        lg: '0.5rem',
+        full: '9999px'
+    },
+    shadows: {
+        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+        xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
     },
     breakpoints: {
         sm: '640px',
         md: '768px',
-        lg: '1024px'
+        lg: '1024px',
+        xl: '1280px'
     }
-}
+} as const;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

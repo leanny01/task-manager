@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { TaskPriority, CreateTaskInput } from '../types/task';
+import { CreateTaskInput } from '../types/task';
+import { TaskPriority } from '../types/enums';
 import { toast } from 'react-toastify';
 
 const Form = styled.form`

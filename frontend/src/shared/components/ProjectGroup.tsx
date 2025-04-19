@@ -121,96 +121,97 @@ const QuickAddButton = styled.button`
 `;
 
 interface ProjectGroupProps {
-    project: Project;
-    tasks: Task[];
-    onTaskAction: (task: Task, action: string) => void;
-    onProjectClick: (project: Project) => void;
-    onAddTask?: (projectId: string) => void;
+  project: Project;
+  tasks: Task[];
+  onTaskAction: (task: Task, action: string) => void;
+  onProjectClick: (project: Project) => void;
+  onAddTask?: (projectId: string) => void;
 }
 
 export default function ProjectGroup({
-    project,
-    tasks,
-    onTaskAction,
-    onProjectClick,
-    onAddTask
+  project,
+  tasks,
+  onTaskAction,
+  onProjectClick,
+  onAddTask
 }: ProjectGroupProps) {
-    const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true);
 
-    const handleToggle = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setIsExpanded(!isExpanded);
-    };
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
 
-    const handleProjectClick = () => {
-        onProjectClick(project);
-    };
+  const handleProjectClick = () => {
+    onProjectClick(project);
+  };
 
-    const handleAddTask = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (onAddTask) {
-            onAddTask(project.id);
-        }
-    };
+  const handleAddTask = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onAddTask) {
+      onAddTask(project.id);
+    }
+  };
+  console.log({ project })
 
-    return (
-        <ProjectGroupContainer>
-            <ProjectHeader onClick={handleProjectClick}>
-                <ToggleButton
-                    onClick={handleToggle}
-                    $isExpanded={isExpanded}
-                    title={isExpanded ? "Collapse project" : "Expand project"}
-                >
-                    <ChevronIcon size={20} />
-                </ToggleButton>
-                <ProjectIcon>
-                    <FolderIcon size={24} />
-                </ProjectIcon>
-                <ProjectContent>
-                    <ListItem
-                        variant="project"
-                        data={{
-                            id: project.id,
-                            title: project.title,
-                            description: project.description,
-                            taskCount: tasks.length,
-                        }}
-                    />
-                </ProjectContent>
-            </ProjectHeader>
-            <TasksContainer $isExpanded={isExpanded}>
-                {tasks.map(task => (
-                    <ListItem
-                        key={task.id}
-                        variant="task"
-                        data={{
-                            ...task,
-                            actions: [
-                                {
-                                    label: 'Toggle Complete',
-                                    onClick: () => onTaskAction(task, 'toggle'),
-                                },
-                                {
-                                    label: 'Edit',
-                                    onClick: () => onTaskAction(task, 'edit'),
-                                },
-                                {
-                                    label: 'Delete',
-                                    onClick: () => onTaskAction(task, 'delete'),
-                                },
-                            ],
-                        }}
-                    />
-                ))}
-                {isExpanded && onAddTask && (
-                    <QuickAddTask>
-                        <QuickAddButton onClick={handleAddTask} title="Add a task to this project">
-                            <PlusIcon size={16} />
-                            Add a task
-                        </QuickAddButton>
-                    </QuickAddTask>
-                )}
-            </TasksContainer>
-        </ProjectGroupContainer>
-    );
+  return (
+    <ProjectGroupContainer>
+      <ProjectHeader onClick={handleProjectClick}>
+        <ToggleButton
+          onClick={handleToggle}
+          $isExpanded={isExpanded}
+          title={isExpanded ? "Collapse project" : "Expand project"}
+        >
+          <ChevronIcon size={20} />
+        </ToggleButton>
+        <ProjectIcon>
+          <FolderIcon size={24} />
+        </ProjectIcon>
+        <ProjectContent>
+          <ListItem
+            variant="project"
+            data={{
+              id: project.id,
+              title: project.title,
+              description: project.description,
+              taskCount: tasks.length,
+            }}
+          />
+        </ProjectContent>
+      </ProjectHeader>
+      <TasksContainer $isExpanded={isExpanded}>
+        {tasks.map(task => (
+          <ListItem
+            key={task.id}
+            variant="task"
+            data={{
+              ...task,
+              actions: [
+                {
+                  label: 'Toggle Complete',
+                  onClick: () => onTaskAction(task, 'toggle'),
+                },
+                {
+                  label: 'Edit',
+                  onClick: () => onTaskAction(task, 'edit'),
+                },
+                {
+                  label: 'Delete',
+                  onClick: () => onTaskAction(task, 'delete'),
+                },
+              ],
+            }}
+          />
+        ))}
+        {isExpanded && onAddTask && (
+          <QuickAddTask>
+            <QuickAddButton onClick={handleAddTask} title="Add a task to this project">
+              <PlusIcon size={16} />
+              Add a task
+            </QuickAddButton>
+          </QuickAddTask>
+        )}
+      </TasksContainer>
+    </ProjectGroupContainer>
+  );
 } 

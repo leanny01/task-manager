@@ -1,4 +1,4 @@
-import { Task, TaskStatus } from "../../task/types/task";
+import { Task } from "../../task/types/task";
 
 export enum ProjectStatus {
   ACTIVE = "ACTIVE",
@@ -19,13 +19,14 @@ export interface ProjectBase {
   status: ProjectStatus;
   priority: ProjectPriority;
   taskIds: string[];
-  dueDate?: string;
-  completedAt?: string;
   createdAt: string;
   updatedAt: string;
+  dueDate?: string;
 }
 
-export type Project = ProjectBase;
+export interface Project extends ProjectBase {
+  tasks?: Task[];
+}
 
 export interface CreateProjectInput {
   title: string;

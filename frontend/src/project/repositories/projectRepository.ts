@@ -4,60 +4,67 @@ import {
   ProjectPriority,
   CreateProjectInput,
   UpdateProjectInput,
+  ProjectBase,
 } from "../types/project";
 import { v4 as uuidv4 } from "uuid";
 
 class ProjectRepository {
   private readonly storageKey = "projects";
 
-  getAll(): Project[] {
+  getAll(): ProjectBase[] {
     const projectsJson = localStorage.getItem(this.storageKey);
     return projectsJson ? JSON.parse(projectsJson) : [];
   }
 
-  save(projects: Project[]): void {
+  save(projects: ProjectBase[]): void {
     localStorage.setItem(this.storageKey, JSON.stringify(projects));
   }
 
-  async getById(id: string): Promise<Project | null> {
+  getById(id: string): ProjectBase | null {
     const projects = this.getAll();
-    return projects.find((project) => project.id === id) || null;
+    return projects.find((p) => p.id === id) || null;
   }
 
-  async create(
-    data: Omit<Project, "id" | "createdAt" | "updatedAt">
-  ): Promise<Project> {
+  update(id: string, updates: UpdateProjectInput): ProjectBase {
     const projects = this.getAll();
-    const newProject: Project = {
-      ...data,
-      id: uuidv4(),
-      taskIds: data.taskIds || [],
-      createdAt: new Date().toISOString(),
+    const projectIndex = projects.findIndex((p) => p.id === id);
+
+    if (projectIndex === -1) {
+      throw new Error(`Project with id ${id} not found`);
+    }
+
+    const updatedProject: ProjectBase = {
+      ...projects[projectIndex],
+      ...updates,
       updatedAt: new Date().toISOString(),
     };
-    projects.push(newProject);
-    this.save(projects);
-    return newProject;
-  }
 
-  async update(id: string, data: Partial<Project>): Promise<Project> {
-    const projects = this.getAll();
-    const index = projects.findIndex((project) => project.id === id);
-    if (index === -1) throw new Error(`Project with id ${id} not found`);
-
-    const updatedProject = {
-      ...projects[index],
-      ...data,
-      updatedAt: new Date().toISOString(),
-    };
-    projects[index] = updatedProject;
+    projects[projectIndex] = updatedProject;
     this.save(projects);
     return updatedProject;
   }
 
-  async delete(id: string): Promise<void> {
+  create(input: CreateProjectInput): ProjectBase {
     const projects = this.getAll();
-    const filteredProjects = projects.filter((project) => project.id !== id);
+    const newProject: ProjectBase = {
+      id: uuidv4(),
+      title: input.title,
+      description: input.description,
+      status: ProjectStatus.ACTIVE,
+      priority: input.priority || ProjectPriority.MEDIUM,
+      taskIds: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      dueDate: input.dueDate,
+    };
+
+    this.save([...projects, newProject]);
+    return newProject;
+  }
+
+  delete(id: string): void {
+    const projects = this.getAll();
+    const filteredProjects = projects.filter((p) => p.id !== id);
     this.save(filteredProjects);
   }
 

@@ -86,10 +86,25 @@ class TaskService {
   }
 
   async markComplete(id: string): Promise<Task> {
-    return this.update(id, {
-      status: TaskStatus.COMPLETED,
-      completedAt: new Date().toISOString(),
-    });
+    const task = await this.getById(id);
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    const updatedTask: Task = {
+      ...task,
+      status:
+        task.status === TaskStatus.COMPLETED
+          ? TaskStatus.PENDING
+          : TaskStatus.COMPLETED,
+      completedAt:
+        task.status === TaskStatus.COMPLETED
+          ? undefined
+          : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    return this.update(id, updatedTask);
   }
 
   async markInProgress(id: string): Promise<Task> {

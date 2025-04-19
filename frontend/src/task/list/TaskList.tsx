@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { Task } from '../types/task';
-import { Project } from '../../project/types/project';
-import ListItem from '../../shared/components/ListItem';
-import ProjectGroup from '../../shared/components/ProjectGroup';
+import TaskItem from '../components/TaskItem';
 
 const List = styled.ul`
   list-style: none;
@@ -12,91 +10,32 @@ const List = styled.ul`
 `;
 
 interface TaskListProps {
-  items: (Task | Project)[];
-  projectTasks?: Record<string, Task[]>;
+  tasks: Task[];
   onToggleComplete: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onEditTask: (task: Task) => void;
   onPromoteToProject?: (task: Task) => void;
-  onProjectClick?: (project: Project) => void;
-  onAddTask?: (projectId: string) => void;
 }
 
 export default function TaskList({
-  items,
-  projectTasks = {},
+  tasks,
   onToggleComplete,
   onDeleteTask,
   onEditTask,
   onPromoteToProject,
-  onProjectClick = () => { },
-  onAddTask,
 }: TaskListProps) {
-  const handleTaskAction = (task: Task, action: string) => {
-    switch (action) {
-      case 'toggle':
-        onToggleComplete(task.id);
-        break;
-      case 'edit':
-        onEditTask(task);
-        break;
-      case 'delete':
-        onDeleteTask(task.id);
-        break;
-    }
-  };
-
   return (
     <List>
-      {items.map(item => {
-        if ('taskIds' in item) {
-          // This is a project
-          const project = item as Project;
-          const tasks = projectTasks[project.id] || [];
-          return (
-            <ProjectGroup
-              key={project.id}
-              project={project}
-              tasks={tasks}
-              onTaskAction={handleTaskAction}
-              onProjectClick={onProjectClick}
-              onAddTask={onAddTask}
-            />
-          );
-        } else {
-          // This is a standalone task
-          const task = item as Task;
-          return (
-            <ListItem
-              key={task.id}
-              variant="task"
-              data={{
-                ...task,
-                actions: [
-                  {
-                    label: 'Toggle Complete',
-                    onClick: () => onToggleComplete(task.id),
-                  },
-                  {
-                    label: 'Edit',
-                    onClick: () => onEditTask(task),
-                  },
-                  {
-                    label: 'Delete',
-                    onClick: () => onDeleteTask(task.id),
-                  },
-                  ...(onPromoteToProject
-                    ? [{
-                      label: 'Promote to Project',
-                      onClick: () => onPromoteToProject(task),
-                    }]
-                    : []),
-                ],
-              }}
-            />
-          );
-        }
-      })}
+      {tasks.map(task => (
+        <TaskItem
+          key={task.id}
+          task={task}
+          onToggleComplete={onToggleComplete}
+          onDelete={onDeleteTask}
+          onEdit={onEditTask}
+          onPromoteToProject={onPromoteToProject}
+        />
+      ))}
     </List>
   );
-} 
+}

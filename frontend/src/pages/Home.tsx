@@ -13,7 +13,7 @@ import AllTasksView from '../task/views/AllTasksView';
 import TodayTasksView from '../task/views/TodayTasksView';
 import UpcomingTasksView from '../task/views/UpcomingTasksView';
 import CompletedTasksView from '../task/views/CompletedTasksView';
-import ProjectsView from '../task/views/ProjectsView';
+import ProjectsList from '../project/list/ProjectList';
 import EditTaskModal from '../task/edit/EditTaskModal';
 import {
   AppContainer,
@@ -86,7 +86,7 @@ const HeaderActions = styled.div`
 
 export default function Home() {
   const { tasks, isLoading: isLoadingTasks, error: tasksError, loadTasks } = useListTasks();
-  const { projects, projectTasks, isLoading: isLoadingProjects, error: projectsError, refresh: refreshProjects } = useProjects();
+  const { projects, projectTasks, isLoading: isLoadingProjects, error: projectsError, refresh: refreshProjects, handlePromoteToProject } = useProjects();
   const { createTask, isLoading: isCreating, error: createError } = useCreateTask();
   const { editTask, isLoading: isEditing, error: editError } = useEditTask();
   const { markComplete, isLoading: isCompleting, error: completeError } = useMarkCompleteTask();
@@ -163,6 +163,7 @@ export default function Home() {
     }
   };
 
+
   // Calculate task counts
   const taskCounts = {
     all: tasks.length,
@@ -208,7 +209,7 @@ export default function Home() {
       case 'completed':
         return <CompletedTasksView {...commonProps} />;
       case 'projects':
-        return <ProjectsView {...commonProps} />;
+        return <ProjectsList {...commonProps} />;
       case 'all':
       default:
         return <AllTasksView {...commonProps} />;
@@ -221,7 +222,7 @@ export default function Home() {
   return (
     <AppContainer>
       <Sidebar>
-        <Logo>TidyTasks</Logo>
+        <Logo>NovaTasks</Logo>
         <NavList>
           <NavItem>
             <NavToggle
@@ -339,6 +340,7 @@ export default function Home() {
           projects={projects}
           onClose={handleCloseModal}
           onSave={handleUpdateTask}
+          onPromoteToProject={handlePromoteToProject}
         />
       )}
     </AppContainer>

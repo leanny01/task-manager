@@ -7,12 +7,15 @@ import { Input } from '../shared/components/forms/Input';
 import { TextArea } from '../shared/components/forms/TextArea';
 import { Button } from '../shared/components/buttons/Button';
 import { Project } from '../../project/types/project';
+import { projectService } from '../../project/services/projectService';
+import { FolderIcon } from '../../shared/components/Icons';
 
 interface EditTaskModalProps {
   task: Task;
   projects: Project[];
   onClose: () => void;
   onSave: (id: string, updates: Partial<Task>) => Promise<Task>;
+  onPromoteToProject?: (task: Task) => void;
 }
 
 const ModalOverlay = styled.div`
@@ -139,11 +142,28 @@ const Select = styled.select`
   }
 `;
 
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const PromoteButton = styled(Button)`
+  background-color: ${props => props.theme.colors.primary};
+  color: ${props => props.theme.colors.text.white};
+  margin-right: auto;
+
+  &:hover {
+    background-color: ${props => props.theme.colors.primaryHover};
+  }
+`;
+
 export default function EditTaskModal({
   task,
   projects,
   onClose,
   onSave,
+  onPromoteToProject,
 }: EditTaskModalProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
@@ -215,6 +235,17 @@ export default function EditTaskModal({
       onClose();
     } catch (error) {
       console.error('Failed to update task:', error);
+    }
+  };
+
+  const handlePromoteToProject = async () => {
+    try {
+      if (onPromoteToProject) {
+        onPromoteToProject(task);
+        onClose();
+      }
+    } catch (error) {
+      console.error('Failed to promote task to project:', error);
     }
   };
 
@@ -303,6 +334,14 @@ export default function EditTaskModal({
           </Select>
 
           <ButtonGroup>
+            {onPromoteToProject && (
+              <PromoteButton onClick={handlePromoteToProject}>
+                <IconWrapper>
+                  <FolderIcon size={16} />
+                  Promote to Project
+                </IconWrapper>
+              </PromoteButton>
+            )}
             <Button onClick={onClose} disabled={false}>
               Cancel
             </Button>
