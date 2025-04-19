@@ -12,26 +12,29 @@ const theme = {
     colors: {
         primary: '#2563eb',
         primaryHover: '#1d4ed8',
-        primaryLight: '#dbeafe',
-        secondary: '#f8fafc',
-        secondaryHover: '#f1f5f9',
+        secondary: '#64748b',
+        secondaryHover: '#475569',
         hover: '#f1f5f9',
-        border: '#e2e8f0',
-        error: '#dc2626',
-        errorLight: '#fee2e2',
         success: '#16a34a',
         successLight: '#dcfce7',
-        background: {
-            white: '#ffffff',
-            light: '#f8fafc',
-            gray: '#f8fafc',
-            dark: '#1e293b'
-        },
+        danger: '#ef4444',
+        error: '#dc2626',
+        errorLight: '#fee2e2',
+        warning: '#f59e0b',
         text: {
             primary: '#1e293b',
             secondary: '#64748b',
             light: '#94a3b8'
-        }
+        },
+        background: {
+            primary: '#ffffff',
+            secondary: '#f8fafc',
+            light: '#f1f5f9',
+            white: '#ffffff',
+            gray: '#f8fafc',
+            dark: '#1e293b'
+        },
+        border: '#e2e8f0'
     },
     spacing: {
         xs: '0.25rem',
@@ -43,8 +46,7 @@ const theme = {
     borderRadius: {
         sm: '0.25rem',
         md: '0.375rem',
-        lg: '0.5rem',
-        full: '9999px'
+        lg: '0.5rem'
     },
     shadows: {
         sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',

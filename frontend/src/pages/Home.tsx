@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Task } from '../task/types/task';
+import { Project } from '../project/types/project';
 import { TaskStatus, TaskPriority } from '../task/types/enums';
 import { useCreateTask } from '../task/create/useCreateTask';
 import { useEditTask } from '../task/edit/useEditTask';
@@ -7,81 +9,97 @@ import { useListTasks } from '../task/list/useListTasks';
 import { useMarkCompleteTask } from '../task/complete/useMarkCompleteTask';
 import { taskService } from '../task/services/taskService';
 import { useProjects } from '../project/hooks/useProjects';
-import SyncStatus from '../calendar/components/SyncStatus';
-import { ListIcon, TodayIcon, UpcomingIcon, CheckCircleIcon, PlusIcon, FolderIcon } from '../shared/components/Icons';
+import { PlusIcon } from '../shared/components/Icons';
 import AllTasksView from '../task/views/AllTasksView';
 import TodayTasksView from '../task/views/TodayTasksView';
 import UpcomingTasksView from '../task/views/UpcomingTasksView';
 import CompletedTasksView from '../task/views/CompletedTasksView';
 import ProjectsList from '../project/list/ProjectList';
 import EditTaskModal from '../task/edit/EditTaskModal';
-import {
-  AppContainer,
-  Sidebar,
-  Logo,
-  NavList,
-  NavItem,
-  MainContent,
-  Header,
-  SearchBar,
-  UserProfile,
-  AddTaskInputContainer,
-  AddButton,
-  TaskContainer,
-  ErrorMessage,
-  LoadingState,
-  EmptyState
-} from './Home.styles';
 import styled from 'styled-components';
 
-const NavBadge = styled.span`
-  background: ${props => props.theme.colors.background.light};
-  color: ${props => props.theme.colors.text.secondary};
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  margin-left: auto;
+const Container = styled.div`
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 `;
 
-const NavItemContent = styled.div`
+const Header = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  gap: 0.5rem;
 `;
 
-const NavToggle = styled.button<{ $isActive: boolean }>`
-  background: none;
-  border: none;
-  padding: 0.75rem 1rem;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  color: ${props => props.theme.colors.text.primary};
-  font-size: 0.875rem;
-  cursor: pointer;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${props => props.theme.colors.hover};
-  }
-
-  &.active {
-    background: ${props => props.theme.colors.primary};
-    color: white;
-
-    ${NavBadge} {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
+const SearchBar = styled.div`
+  flex: 1;
+  max-width: 600px;
+  
+  input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid ${props => props.theme.colors.border};
+    border-radius: ${props => props.theme.borderRadius.md};
+    font-size: 0.875rem;
+    
+    &:focus {
+      outline: none;
+      border-color: ${props => props.theme.colors.primary};
     }
   }
 `;
 
-const HeaderActions = styled.div`
+const AddTaskInputContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  
+  input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid ${props => props.theme.colors.border};
+    border-radius: ${props => props.theme.borderRadius.md};
+    font-size: 0.875rem;
+    
+    &:focus {
+      outline: none;
+      border-color: ${props => props.theme.colors.primary};
+    }
+  }
+`;
+
+const AddButton = styled.button`
+  padding: 0.75rem;
+  background-color: ${props => props.theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: ${props => props.theme.borderRadius.md};
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  
+  &:hover {
+    background-color: ${props => props.theme.colors.primaryHover};
+  }
+`;
+
+const TaskContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+`;
+
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+const ErrorMessage = styled.div`
+  color: ${props => props.theme.colors.error};
+  padding: 1rem;
+  text-align: center;
 `;
 
 export default function Home() {
@@ -90,9 +108,9 @@ export default function Home() {
   const { createTask, isLoading: isCreating, error: createError } = useCreateTask();
   const { editTask, isLoading: isEditing, error: editError } = useEditTask();
   const { markComplete, isLoading: isCompleting, error: completeError } = useMarkCompleteTask();
+  const navigate = useNavigate();
 
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'today' | 'upcoming' | 'completed' | 'projects'>('all');
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -163,176 +181,57 @@ export default function Home() {
     }
   };
 
-
-  // Calculate task counts
-  const taskCounts = {
-    all: tasks.length,
-    today: tasks.filter(task => {
-      const taskDate = task.toDate ? new Date(task.toDate) : null;
-      if (!taskDate) return false;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      taskDate.setHours(0, 0, 0, 0);
-      return taskDate.getTime() === today.getTime();
-    }).length,
-    upcoming: tasks.filter(task => {
-      const taskDate = task.toDate ? new Date(task.toDate) : null;
-      if (!taskDate) return false;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      taskDate.setHours(0, 0, 0, 0);
-      return taskDate.getTime() > today.getTime();
-    }).length,
-    completed: tasks.filter(task => task.status === TaskStatus.COMPLETED).length,
-    projects: projects.length
-  };
-
-  const renderActiveView = () => {
-    const commonProps = {
-      tasks: tasks.filter(task => {
-        if (!searchQuery) return true;
-        return task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      }),
-      projects,
-      projectTasks,
-      onToggleComplete: handleToggleComplete,
-      onDeleteTask: handleDeleteTask,
-      onEditTask: handleEditTask,
-    };
-
-    switch (activeFilter) {
-      case 'today':
-        return <TodayTasksView {...commonProps} />;
-      case 'upcoming':
-        return <UpcomingTasksView {...commonProps} />;
-      case 'completed':
-        return <CompletedTasksView {...commonProps} />;
-      case 'projects':
-        return <ProjectsList {...commonProps} />;
-      case 'all':
-      default:
-        return <AllTasksView {...commonProps} />;
-    }
+  const handleProjectClick = (project: Project) => {
+    navigate(`/projects/${project.id}`);
   };
 
   const isLoading = isLoadingTasks || isLoadingProjects || isCreating || isEditing || isCompleting;
   const error = tasksError || projectsError || createError || editError || completeError;
 
   return (
-    <AppContainer>
-      <Sidebar>
-        <Logo>NovaTasks</Logo>
-        <NavList>
-          <NavItem>
-            <NavToggle
-              className={activeFilter === 'all' ? 'active' : ''}
-              onClick={() => setActiveFilter('all')}
-              $isActive={activeFilter === 'all'}
-            >
-              <NavItemContent>
-                <ListIcon size={16} />
-                <span>All</span>
-                <NavBadge>{taskCounts.all}</NavBadge>
-              </NavItemContent>
-            </NavToggle>
-          </NavItem>
-          <NavItem>
-            <NavToggle
-              className={activeFilter === 'today' ? 'active' : ''}
-              onClick={() => setActiveFilter('today')}
-              $isActive={activeFilter === 'today'}
-            >
-              <NavItemContent>
-                <TodayIcon size={16} />
-                <span>Today</span>
-                <NavBadge>{taskCounts.today}</NavBadge>
-              </NavItemContent>
-            </NavToggle>
-          </NavItem>
-          <NavItem>
-            <NavToggle
-              className={activeFilter === 'upcoming' ? 'active' : ''}
-              onClick={() => setActiveFilter('upcoming')}
-              $isActive={activeFilter === 'upcoming'}
-            >
-              <NavItemContent>
-                <UpcomingIcon size={16} />
-                <span>Upcoming</span>
-                <NavBadge>{taskCounts.upcoming}</NavBadge>
-              </NavItemContent>
-            </NavToggle>
-          </NavItem>
-          <NavItem>
-            <NavToggle
-              className={activeFilter === 'projects' ? 'active' : ''}
-              onClick={() => setActiveFilter('projects')}
-              $isActive={activeFilter === 'projects'}
-            >
-              <NavItemContent>
-                <FolderIcon size={16} />
-                <span>Projects</span>
-                <NavBadge>{taskCounts.projects}</NavBadge>
-              </NavItemContent>
-            </NavToggle>
-          </NavItem>
-          <NavItem>
-            <NavToggle
-              className={activeFilter === 'completed' ? 'active' : ''}
-              onClick={() => setActiveFilter('completed')}
-              $isActive={activeFilter === 'completed'}
-            >
-              <NavItemContent>
-                <CheckCircleIcon size={16} />
-                <span>Completed</span>
-                <NavBadge>{taskCounts.completed}</NavBadge>
-              </NavItemContent>
-            </NavToggle>
-          </NavItem>
-        </NavList>
-      </Sidebar>
+    <Container>
+      <Header>
+        <SearchBar>
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </SearchBar>
+      </Header>
 
-      <MainContent>
-        <Header>
-          <SearchBar>
-            <input
-              type="text"
-              placeholder="Search tasks..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </SearchBar>
-          <HeaderActions>
-            <SyncStatus />
-            <UserProfile>
-              <img src="/default-avatar.png" alt="User profile" />
-            </UserProfile>
-          </HeaderActions>
-        </Header>
+      <TaskContainer>
+        <AddTaskInputContainer>
+          <input
+            type="text"
+            placeholder="Type a task name and press Enter or click +"
+            value={newTaskTitle}
+            onChange={(e) => setNewTaskTitle(e.target.value)}
+            onKeyPress={handleAddTask}
+          />
+          <AddButton onClick={handleAddTaskClick}>
+            <PlusIcon size={16} />
+          </AddButton>
+        </AddTaskInputContainer>
 
-        <TaskContainer>
-          <AddTaskInputContainer>
-            <input
-              type="text"
-              placeholder="Type a task name and press Enter or click +"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyPress={handleAddTask}
-            />
-            <AddButton onClick={handleAddTaskClick}>
-              <PlusIcon size={16} />
-            </AddButton>
-          </AddTaskInputContainer>
-
-          {isLoading ? (
-            <LoadingState>Loading...</LoadingState>
-          ) : error ? (
-            <ErrorMessage>{error}</ErrorMessage>
-          ) : (
-            renderActiveView()
-          )}
-        </TaskContainer>
-      </MainContent>
+        {isLoading ? (
+          <LoadingState>Loading...</LoadingState>
+        ) : error ? (
+          <ErrorMessage>{error}</ErrorMessage>
+        ) : (
+          <AllTasksView
+            tasks={tasks.filter(task => {
+              if (!searchQuery) return true;
+              return task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()));
+            })}
+            onToggleComplete={handleToggleComplete}
+            onDeleteTask={handleDeleteTask}
+            onEditTask={handleEditTask}
+          />
+        )}
+      </TaskContainer>
 
       {editingTask && (
         <EditTaskModal
@@ -343,6 +242,6 @@ export default function Home() {
           onPromoteToProject={handlePromoteToProject}
         />
       )}
-    </AppContainer>
+    </Container>
   );
 } 
