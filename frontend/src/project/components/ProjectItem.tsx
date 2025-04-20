@@ -7,7 +7,6 @@ interface ProjectItemProps {
     project: Project;
     tasks: Task[];
     onProjectClick?: (project: Project) => void;
-    onAddTask?: (projectId: string) => void;
     onTaskAction: (task: Task, action: string) => void;
 }
 
@@ -15,13 +14,20 @@ export default function ProjectItem({
     project,
     tasks,
     onProjectClick,
-    onAddTask,
     onTaskAction,
 }: ProjectItemProps) {
     const actions = [
         {
-            label: 'Add Task',
-            onClick: () => onAddTask?.(project.id),
+            label: 'Mark Complete',
+            onClick: () => onTaskAction(project as unknown as Task, 'toggle'),
+        },
+        {
+            label: 'Edit',
+            onClick: () => onTaskAction(project as unknown as Task, 'edit'),
+        },
+        {
+            label: 'Delete',
+            onClick: () => onTaskAction(project as unknown as Task, 'delete'),
         },
     ];
 
@@ -29,7 +35,10 @@ export default function ProjectItem({
         <Item
             variant="project"
             data={{
-                ...project,
+                id: project.id,
+                title: project.title,
+                description: project.description,
+                status: project.status,
                 actions,
             }}
             onClick={() => onProjectClick?.(project)}

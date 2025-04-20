@@ -1,44 +1,37 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Project } from '../types/project';
-import { Task } from '../../task/types/task';
+import { CustomTheme } from '../../shared/theme';
 import ProjectItem from '../components/ProjectItem';
+import { Task } from '../../task/types/task';
 
 const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 `;
 
 interface ProjectListProps {
     projects: Project[];
-    projectTasks: Record<string, Task[]>;
-    onToggleComplete: (id: string) => void;
-    onDeleteTask: (id: string) => void;
-    onEditTask: (task: Task) => void;
-    onProjectClick?: (project: Project) => void;
-    onAddTask?: (projectId: string) => void;
+    onEditProject: (project: Project) => void;
+    onDeleteProject: (id: string) => Promise<void>;
+    onToggleStatus: (id: string) => Promise<void>;
 }
 
-export default function ProjectList({
-    projects,
-    projectTasks,
-    onToggleComplete,
-    onDeleteTask,
-    onEditTask,
-    onProjectClick,
-    onAddTask,
-}: ProjectListProps) {
+export default function ProjectList({ projects, onEditProject, onDeleteProject, onToggleStatus }: ProjectListProps) {
     const handleTaskAction = (task: Task, action: string) => {
         switch (action) {
             case 'toggle':
-                onToggleComplete(task.id);
+                onToggleStatus(task.id);
                 break;
             case 'edit':
-                onEditTask(task);
+                onEditProject(task as unknown as Project);
                 break;
             case 'delete':
-                onDeleteTask(task.id);
+                onDeleteProject(task.id);
                 break;
         }
     };
@@ -49,9 +42,8 @@ export default function ProjectList({
                 <ProjectItem
                     key={project.id}
                     project={project}
-                    tasks={projectTasks[project.id] || []}
-                    onProjectClick={onProjectClick}
-                    onAddTask={onAddTask}
+                    tasks={[]}
+                    onProjectClick={onEditProject}
                     onTaskAction={handleTaskAction}
                 />
             ))}
