@@ -4,8 +4,8 @@ import { Task } from '../types/task';
 
 interface AllTasksViewProps {
     tasks: Task[];
-    onToggleComplete: (id: string) => void;
-    onDeleteTask: (id: string) => void;
+    onToggleComplete: (id: string) => Promise<void>;
+    onDeleteTask: (id: string) => Promise<void>;
     onEditTask: (task: Task) => void;
 }
 
@@ -13,7 +13,7 @@ export default function AllTasksView({
     tasks,
     onToggleComplete,
     onDeleteTask,
-    onEditTask,
+    onEditTask
 }: AllTasksViewProps) {
     return (
         <TaskView

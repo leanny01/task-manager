@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import TaskView from '../components/TaskView';
 import { Task } from '../types/task';
 
@@ -9,13 +9,8 @@ interface UpcomingTasksViewProps {
     onEditTask: (task: Task) => void;
 }
 
-export default function UpcomingTasksView({
-    tasks,
-    onToggleComplete,
-    onDeleteTask,
-    onEditTask,
-}: UpcomingTasksViewProps) {
-    const upcomingTasks = useMemo(() => {
+export default function UpcomingTasksView({ tasks, onToggleComplete, onDeleteTask, onEditTask }: UpcomingTasksViewProps) {
+    const filterUpcomingTasks = (tasks: Task[]) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -25,8 +20,9 @@ export default function UpcomingTasksView({
             taskDate.setHours(0, 0, 0, 0);
             return taskDate.getTime() > today.getTime();
         });
-    }, [tasks]);
+    };
 
+    const upcomingTasks = filterUpcomingTasks(tasks);
 
     return (
         <TaskView

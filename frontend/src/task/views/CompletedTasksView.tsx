@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import TaskView from '../components/TaskView';
 import { Task } from '../types/task';
 import { TaskStatus } from '../types/enums';
-import { Project } from '../../project/types/project';
 
 interface CompletedTasksViewProps {
     tasks: Task[];
@@ -11,15 +10,12 @@ interface CompletedTasksViewProps {
     onEditTask: (task: Task) => void;
 }
 
-export default function CompletedTasksView({
-    tasks,
-    onToggleComplete,
-    onDeleteTask,
-    onEditTask,
-}: CompletedTasksViewProps) {
-    const completedTasks = useMemo(() => {
+export default function CompletedTasksView({ tasks, onToggleComplete, onDeleteTask, onEditTask }: CompletedTasksViewProps) {
+    const filterCompletedTasks = (tasks: Task[]) => {
         return tasks.filter(task => task.status === TaskStatus.COMPLETED);
-    }, [tasks]);
+    };
+
+    const completedTasks = filterCompletedTasks(tasks);
 
     return (
         <TaskView

@@ -1,24 +1,17 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import TaskView from '../components/TaskView';
 import { Task } from '../types/task';
-import { Project } from '../../project/types/project';
 
 interface TodayTasksViewProps {
     tasks: Task[];
-
     onToggleComplete: (id: string) => void;
     onDeleteTask: (id: string) => void;
     onEditTask: (task: Task) => void;
 }
 
-export default function TodayTasksView({
-    tasks,
+export default function TodayTasksView({ tasks, onToggleComplete, onDeleteTask, onEditTask }: TodayTasksViewProps) {
 
-    onToggleComplete,
-    onDeleteTask,
-    onEditTask,
-}: TodayTasksViewProps) {
-    const todayTasks = useMemo(() => {
+    const filterTodayTasks = (tasks: Task[]) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -28,8 +21,9 @@ export default function TodayTasksView({
             taskDate.setHours(0, 0, 0, 0);
             return taskDate.getTime() === today.getTime();
         });
-    }, [tasks]);
+    };
 
+    const todayTasks = filterTodayTasks(tasks);
 
     return (
         <TaskView
