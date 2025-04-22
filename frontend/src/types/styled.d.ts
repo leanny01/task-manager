@@ -14,6 +14,7 @@ declare module "styled-components" {
       error: string;
       errorLight: string;
       warning: string;
+      warningLight: string;
       text: {
         primary: string;
         secondary: string;

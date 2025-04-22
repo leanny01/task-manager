@@ -12,6 +12,7 @@ export interface ThemeColors {
   error: string;
   errorLight: string;
   warning: string;
+  warningLight: string;
   text: {
     primary: string;
     secondary: string;
@@ -75,6 +76,7 @@ export const theme: CustomTheme = {
     error: "#ef4444",
     errorLight: "#fca5a5",
     warning: "#f59e0b",
+    warningLight: "#fef3c7",
     text: {
       primary: "#1e293b",
       secondary: "#64748b",

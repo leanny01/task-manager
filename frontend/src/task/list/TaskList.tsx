@@ -10,7 +10,7 @@ const List = styled.ul`
 `;
 
 interface TaskListProps {
-  tasks: Task[];
+  tasks?: Task[];
   onToggleComplete: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onEditTask: (task: Task) => void;
@@ -18,7 +18,7 @@ interface TaskListProps {
 }
 
 export default function TaskList({
-  tasks,
+  tasks = [],
   onToggleComplete,
   onDeleteTask,
   onEditTask,

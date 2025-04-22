@@ -8,7 +8,7 @@ import AllProjectsView from '../views/AllProjectsView';
 export default function ProjectListPage() {
     return (
         <ProjectViewWrapper>
-            {({ projects, onEditProject, onDeleteProject, onToggleStatus, isLoading }) => (
+            {({ projects, onEditProject, onDeleteProject, onToggleStatus }) => (
                 <Routes>
                     <Route path="/" element={<Navigate to="all" replace />} />
                     <Route path="all" element={
@@ -17,7 +17,6 @@ export default function ProjectListPage() {
                             onEditProject={onEditProject}
                             onDeleteProject={onDeleteProject}
                             onToggleStatus={onToggleStatus}
-                            isLoading={isLoading}
                         />
                     } />
                     <Route path="active" element={
@@ -26,7 +25,6 @@ export default function ProjectListPage() {
                             onEditProject={onEditProject}
                             onDeleteProject={onDeleteProject}
                             onToggleStatus={onToggleStatus}
-                            isLoading={isLoading}
                         />
                     } />
                     <Route path="completed" element={
@@ -35,7 +33,6 @@ export default function ProjectListPage() {
                             onEditProject={onEditProject}
                             onDeleteProject={onDeleteProject}
                             onToggleStatus={onToggleStatus}
-                            isLoading={isLoading}
                         />
                     } />
                 </Routes>

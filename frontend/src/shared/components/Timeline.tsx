@@ -3,84 +3,78 @@ import styled from 'styled-components';
 import moment from 'moment';
 
 const TimelineContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  color: ${props => props.theme.colors.text.secondary};
+  width: 100%;
+  height: 60px;
+  background: ${({ theme }) => theme.colors.background};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  position: relative;
+  overflow: hidden;
+  margin: 1rem 0;
 `;
 
-const TimelineRow = styled.div`
+const TimelineBar = styled.div<{ $progress: number }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: ${({ $progress }) => `${$progress}%`};
+  background: ${({ theme }) => theme.colors.primary};
+  opacity: 0.2;
+  transition: width 0.3s ease;
+`;
+
+const TimelineProgress = styled.div<{ $progress: number }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: ${({ $progress }) => `${$progress}%`};
+  background: ${({ theme }) => theme.colors.primary};
+  opacity: 0.8;
+  transition: width 0.3s ease;
+`;
+
+const TimelineLabels = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
+  padding: 0 1rem;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.875rem;
 `;
-
-const TimelineLabel = styled.span`
-  font-weight: 500;
-  color: ${props => props.theme.colors.text.primary};
-`;
-
-const TimelineValue = styled.span`
-  color: ${props => props.theme.colors.text.secondary};
-`;
-
-const TimelineDuration = styled.span`
-  color: ${props => props.theme.colors.primary};
-  font-weight: 500;
-`;
-
-const formatDuration = (duration: moment.Duration): string => {
-    const days = Math.floor(duration.asDays());
-    const hours = duration.hours();
-    const minutes = duration.minutes();
-
-    if (days > 0) {
-        return `${days}d ${hours}h`;
-    } else if (hours > 0) {
-        return `${hours}h ${minutes}m`;
-    } else {
-        return `${minutes}m`;
-    }
-};
 
 interface TimelineProps {
-    fromDate?: string;
-    toDate?: string;
-    showDuration?: boolean;
+    fromDate: string;
+    toDate: string;
     showLabels?: boolean;
-    className?: string;
 }
 
-export default function Timeline({
-    fromDate,
-    toDate,
-    showDuration = true,
-    showLabels = true,
-    className
-}: TimelineProps) {
+export const Timeline: React.FC<TimelineProps> = ({ fromDate, toDate, showLabels = true }) => {
     if (!fromDate || !toDate) return null;
 
     const start = moment(fromDate);
     const end = moment(toDate);
-    const duration = moment.duration(end.diff(start));
+    const now = moment();
+    const totalDuration = end.diff(start);
+    const elapsedDuration = now.diff(start);
+    const progress = Math.min(100, Math.max(0, (elapsedDuration / totalDuration) * 100));
 
     return (
-        <TimelineContainer className={className}>
-            <TimelineRow>
-                {showLabels && <TimelineLabel>Start:</TimelineLabel>}
-                <TimelineValue>{start.format('MMM D, YYYY [at] h:mm A')}</TimelineValue>
-            </TimelineRow>
-            <TimelineRow>
-                {showLabels && <TimelineLabel>End:</TimelineLabel>}
-                <TimelineValue>{end.format('MMM D, YYYY [at] h:mm A')}</TimelineValue>
-            </TimelineRow>
-            {showDuration && (
-                <TimelineRow>
-                    {showLabels && <TimelineLabel>Duration:</TimelineLabel>}
-                    <TimelineDuration>{formatDuration(duration)}</TimelineDuration>
-                </TimelineRow>
+        <TimelineContainer>
+            <TimelineBar $progress={100} />
+            <TimelineProgress $progress={progress} />
+            {showLabels && (
+                <TimelineLabels>
+                    <span>{start.format('MMM D, YYYY')}</span>
+                    <span>{end.format('MMM D, YYYY')}</span>
+                </TimelineLabels>
             )}
         </TimelineContainer>
     );
-} 
+}; 

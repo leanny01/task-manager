@@ -1,12 +1,43 @@
 import React from 'react';
+import styled from 'styled-components';
 import { Task } from '../types/task';
-import { TaskStatus } from '../types/enums';
-import Item from '../../shared/components/Item';
+import { Project } from '../../project/types/project';
+import { Checkbox } from '../../shared/components/Checkbox';
+import { Button } from '../../shared/components/Button';
+import { EditIcon, DeleteIcon, ArrowUpIcon } from '../../shared/components/Icons';
+
+const Item = styled.li`
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+  background-color: ${props => props.theme.colors.background};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${props => props.theme.colors.hover};
+  }
+`;
+
+const TaskInfo = styled.div`
+  flex: 1;
+  margin-left: 1rem;
+`;
+
+const TaskTitle = styled.span<{ completed: boolean }>`
+  text-decoration: ${props => props.completed ? 'line-through' : 'none'};
+  color: ${props => props.completed ? props.theme.colors.text.secondary : props.theme.colors.text.primary};
+`;
+
+const TaskActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
 
 interface TaskItemProps {
     task: Task;
-    onToggleComplete: (taskId: string) => void;
-    onDelete: (taskId: string) => void;
+    onToggleComplete: (id: string) => void;
+    onDelete: (id: string) => void;
     onEdit: (task: Task) => void;
     onPromoteToProject?: (task: Task) => void;
 }
@@ -18,37 +49,39 @@ export default function TaskItem({
     onEdit,
     onPromoteToProject,
 }: TaskItemProps) {
-    const actions = [
-        {
-            label: task.status === TaskStatus.COMPLETED ? 'Mark Incomplete' : 'Mark Complete',
-            onClick: () => onToggleComplete(task.id),
-        },
-        {
-            label: 'Edit',
-            onClick: () => onEdit(task),
-        },
-        {
-            label: 'Delete',
-            onClick: () => onDelete(task.id),
-        },
-        ...(onPromoteToProject
-            ? [{
-                label: 'Promote to Project',
-                onClick: () => onPromoteToProject(task),
-            }]
-            : []),
-    ];
-
     return (
-        <Item
-            variant="task"
-            data={{
-                id: task.id,
-                title: task.title,
-                description: task.description,
-                status: task.status,
-                actions,
-            }}
-        />
+        <Item>
+            <Checkbox
+                checked={task.status === 'COMPLETED'}
+                onChange={() => onToggleComplete(task.id)}
+            />
+            <TaskInfo>
+                <TaskTitle completed={task.status === 'COMPLETED'}>
+                    {task.title}
+                </TaskTitle>
+            </TaskInfo>
+            <TaskActions>
+                {onPromoteToProject && (
+                    <Button
+                        variant="secondary"
+                        onClick={() => onPromoteToProject(task)}
+                    >
+                        <ArrowUpIcon />
+                    </Button>
+                )}
+                <Button
+                    variant="secondary"
+                    onClick={() => onEdit(task)}
+                >
+                    <EditIcon />
+                </Button>
+                <Button
+                    variant="danger"
+                    onClick={() => onDelete(task.id)}
+                >
+                    <DeleteIcon />
+                </Button>
+            </TaskActions>
+        </Item>
     );
 } 

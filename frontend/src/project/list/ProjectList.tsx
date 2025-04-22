@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Project } from '../types/project';
 import { CustomTheme } from '../../shared/theme';
@@ -22,6 +23,12 @@ interface ProjectListProps {
 }
 
 export default function ProjectList({ projects, onEditProject, onDeleteProject, onToggleStatus }: ProjectListProps) {
+    const navigate = useNavigate();
+
+    const handleProjectClick = (project: Project) => {
+        navigate(`/projects/${project.id}`);
+    };
+
     const handleTaskAction = (task: Task, action: string) => {
         switch (action) {
             case 'toggle':
@@ -43,7 +50,7 @@ export default function ProjectList({ projects, onEditProject, onDeleteProject, 
                     key={project.id}
                     project={project}
                     tasks={[]}
-                    onProjectClick={onEditProject}
+                    onProjectClick={handleProjectClick}
                     onTaskAction={handleTaskAction}
                 />
             ))}

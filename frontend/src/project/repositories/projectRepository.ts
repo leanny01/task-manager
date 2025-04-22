@@ -7,26 +7,44 @@ import {
   ProjectBase,
 } from "../types/project";
 import { v4 as uuidv4 } from "uuid";
+import { taskRepository } from "../../task/repositories/taskRepository";
+import { Task } from "../../task/types/task";
 
 class ProjectRepository {
   private readonly storageKey = "projects";
 
-  getAll(): ProjectBase[] {
+  private transformTasks(project: ProjectBase): Project {
+    const tasks = taskRepository.getAll();
+    return {
+      ...project,
+      tasks: project.taskIds
+        .map((id) => tasks.find((task) => task.id === id))
+        .filter(Boolean) as Task[],
+    };
+  }
+
+  private getAllBase(): ProjectBase[] {
     const projectsJson = localStorage.getItem(this.storageKey);
     return projectsJson ? JSON.parse(projectsJson) : [];
+  }
+
+  getAll(): Project[] {
+    const projects = this.getAllBase();
+    return projects.map(this.transformTasks);
   }
 
   save(projects: ProjectBase[]): void {
     localStorage.setItem(this.storageKey, JSON.stringify(projects));
   }
 
-  getById(id: string): ProjectBase | null {
-    const projects = this.getAll();
-    return projects.find((p) => p.id === id) || null;
+  getById(id: string): Project | null {
+    const projects = this.getAllBase();
+    const project = projects.find((p) => p.id === id);
+    return project ? this.transformTasks(project) : null;
   }
 
   update(id: string, updates: UpdateProjectInput): ProjectBase {
-    const projects = this.getAll();
+    const projects = this.getAllBase();
     const projectIndex = projects.findIndex((p) => p.id === id);
 
     if (projectIndex === -1) {
@@ -45,7 +63,7 @@ class ProjectRepository {
   }
 
   create(input: CreateProjectInput): ProjectBase {
-    const projects = this.getAll();
+    const projects = this.getAllBase();
     const newProject: ProjectBase = {
       id: uuidv4(),
       title: input.title,
@@ -63,12 +81,15 @@ class ProjectRepository {
   }
 
   delete(id: string): void {
-    const projects = this.getAll();
+    const projects = this.getAllBase();
     const filteredProjects = projects.filter((p) => p.id !== id);
     this.save(filteredProjects);
   }
 
-  async addTaskToProject(projectId: string, taskId: string): Promise<Project> {
+  async addTaskToProject(
+    projectId: string,
+    taskId: string
+  ): Promise<ProjectBase> {
     const project = await this.getById(projectId);
     if (!project) throw new Error(`Project with id ${projectId} not found`);
 
@@ -82,7 +103,7 @@ class ProjectRepository {
   async removeTaskFromProject(
     projectId: string,
     taskId: string
-  ): Promise<Project> {
+  ): Promise<ProjectBase> {
     const project = await this.getById(projectId);
     if (!project) throw new Error(`Project with id ${projectId} not found`);
 

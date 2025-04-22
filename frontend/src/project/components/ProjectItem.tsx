@@ -12,7 +12,6 @@ interface ProjectItemProps {
 
 export default function ProjectItem({
     project,
-    tasks,
     onProjectClick,
     onTaskAction,
 }: ProjectItemProps) {
@@ -33,7 +32,7 @@ export default function ProjectItem({
 
     return (
         <Item
-            variant="project"
+            $variant="project"
             data={{
                 id: project.id,
                 title: project.title,

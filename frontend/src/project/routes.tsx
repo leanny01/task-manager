@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProjectListPage from './pages/ProjectListPage';
-import ProjectDetails from './pages/ProjectDetails';
+import ProjectDetails from './pages/ProjectDetailsPage';
 
 export function ProjectRoutes() {
     return (

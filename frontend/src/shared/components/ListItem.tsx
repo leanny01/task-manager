@@ -22,16 +22,17 @@ const QuickActions = styled.div`
 `;
 
 const QuickActionButton = styled.button`
-  background: ${props => props.theme.colors.background.light};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 0.375rem;
-  padding: 0.375rem;
+  background: none;
+  border: none;
+  padding: 0.5rem;
   color: ${props => props.theme.colors.text.secondary};
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: ${props => props.theme.borderRadius.sm};
   transition: all 0.2s ease;
+  position: relative;
 
   svg {
     width: 1rem;
@@ -40,10 +41,30 @@ const QuickActionButton = styled.button`
   }
 
   &:hover {
-    background: ${props => props.theme.colors.background.white};
+    background: ${props => props.theme.colors.background.light};
     color: ${props => props.theme.colors.text.primary};
-    border-color: ${props => props.theme.colors.primary};
     transform: translateY(-1px);
+  }
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.25rem 0.5rem;
+    background: ${props => props.theme.colors.text.primary};
+    color: ${props => props.theme.colors.background.white};
+    border-radius: ${props => props.theme.borderRadius.sm};
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    opacity: 1;
   }
 `;
 
@@ -257,12 +278,41 @@ const MenuButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.5rem;
+  border-radius: ${props => props.theme.borderRadius.sm};
   transition: all 0.2s ease;
+  position: relative;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 1.5;
+  }
 
   &:hover {
-    background-color: ${props => props.theme.colors.hover};
+    background: ${props => props.theme.colors.background.light};
     color: ${props => props.theme.colors.text.primary};
+    transform: translateY(-1px);
+  }
+
+  &::after {
+    content: 'More actions';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.25rem 0.5rem;
+    background: ${props => props.theme.colors.text.primary};
+    color: ${props => props.theme.colors.background.white};
+    border-radius: ${props => props.theme.borderRadius.sm};
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  &:hover::after {
+    opacity: 1;
   }
 `;
 
@@ -457,7 +507,7 @@ export default function ListItem({ variant = 'task', onClick, data, className }:
           <QuickActionButton
             key={index}
             onClick={(e) => handleQuickAction(e, action)}
-            title={action.label}
+            data-tooltip={action.label}
           >
             {quickActionMap[action.label as keyof typeof quickActionMap]}
           </QuickActionButton>

@@ -8,7 +8,7 @@ import {
 } from "../types/project";
 import { v4 as uuidv4 } from "uuid";
 import { taskService } from "../../task/services/taskService";
-import { Task } from "../../task/types/task";
+import { Task, CreateTaskInput } from "../../task/types/task";
 import { TaskPriority, TaskStatus } from "../../task/types/enums";
 import { projectRepository } from "../repositories/projectRepository";
 
@@ -180,6 +180,22 @@ export class ProjectService {
     } catch (error) {
       console.error("Error promoting task to project:", error);
       throw new Error("Failed to promote task to project");
+    }
+  }
+
+  async addTaskToProject(
+    projectId: string,
+    taskInput: CreateTaskInput
+  ): Promise<Project> {
+    try {
+      const task = await taskService.create(taskInput);
+      const project = await projectRepository.addTaskToProject(
+        projectId,
+        task.id
+      );
+      return projectRepository.getById(projectId) as Project;
+    } catch (error) {
+      throw new Error("Failed to add task to project");
     }
   }
 }

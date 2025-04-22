@@ -36,23 +36,18 @@ const pulse = keyframes`
   }
 `;
 
-const ItemContainer = styled.li<{ completed?: boolean }>`
+const ItemContainer = styled.div<{ $status?: string; $variant?: string; $priority?: string }>`
   display: flex;
   align-items: center;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  background: white;
-  margin-bottom: 0.5rem;
-  border: 1px solid ${props => props.theme.colors.border};
-  transition: all 0.2s ease;
-  opacity: ${props => props.completed ? 0.7 : 1};
-  animation: ${slideDown} 0.3s ease-out;
+  justify-content: space-between;
+  padding: 1rem;
+  background: ${props => props.theme.colors.background.white};
+  border-radius: ${props => props.theme.borderRadius.md};
   box-shadow: ${props => props.theme.shadows.sm};
+  transition: all 0.2s ease;
 
   &:hover {
-    border-color: ${props => props.theme.colors.primary};
     box-shadow: ${props => props.theme.shadows.md};
-    transform: translateY(-2px);
   }
 `;
 
@@ -60,18 +55,23 @@ const Content = styled.div`
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
 `;
 
-const Title = styled.span<{ completed?: boolean }>`
-  flex: 1;
+const Title = styled.h3`
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
   color: ${props => props.theme.colors.text.primary};
-  text-decoration: ${props => props.completed ? 'line-through' : 'none'};
-  opacity: ${props => props.completed ? 0.7 : 1};
-  transition: all 0.2s ease;
 `;
 
-const StatusBadge = styled.span<{ status: TaskStatus | ProjectStatus }>`
+const Description = styled.p`
+  margin: 0;
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.text.secondary};
+`;
+
+const StatusBadge = styled.span<{ $status: TaskStatus | ProjectStatus }>`
   padding: 0.25rem 0.5rem;
   border-radius: 1rem;
   font-size: 0.75rem;
@@ -79,107 +79,103 @@ const StatusBadge = styled.span<{ status: TaskStatus | ProjectStatus }>`
   align-items: center;
   gap: 0.25rem;
   background-color: ${props => {
-        switch (props.status) {
-            case TaskStatus.COMPLETED:
-            case ProjectStatus.COMPLETED:
-                return props.theme.colors.successLight;
-            case TaskStatus.IN_PROGRESS:
-            case ProjectStatus.ACTIVE:
-                return '#DDE3FF'; // Softer blue for idle state
-            default:
-                return props.theme.colors.background.light;
-        }
-    }};
+    switch (props.$status) {
+      case TaskStatus.COMPLETED:
+      case ProjectStatus.COMPLETED:
+        return props.theme.colors.successLight;
+      case TaskStatus.IN_PROGRESS:
+      case ProjectStatus.ACTIVE:
+        return '#DDE3FF';
+      default:
+        return props.theme.colors.background.light;
+    }
+  }};
   color: ${props => {
-        switch (props.status) {
-            case TaskStatus.COMPLETED:
-            case ProjectStatus.COMPLETED:
-                return props.theme.colors.success;
-            case TaskStatus.IN_PROGRESS:
-            case ProjectStatus.ACTIVE:
-                return props.theme.colors.primary;
-            default:
-                return props.theme.colors.text.secondary;
-        }
-    }};
+    switch (props.$status) {
+      case TaskStatus.COMPLETED:
+      case ProjectStatus.COMPLETED:
+        return props.theme.colors.success;
+      case TaskStatus.IN_PROGRESS:
+      case ProjectStatus.ACTIVE:
+        return props.theme.colors.primary;
+      default:
+        return props.theme.colors.text.secondary;
+    }
+  }};
   transition: all 0.2s ease;
 
   &:hover {
     transform: scale(1.05);
     background-color: ${props => {
-        switch (props.status) {
-            case TaskStatus.IN_PROGRESS:
-            case ProjectStatus.ACTIVE:
-                return props.theme.colors.primary;
-            default:
-                return props.theme.colors.background.light;
-        }
-    }};
+    switch (props.$status) {
+      case TaskStatus.IN_PROGRESS:
+      case ProjectStatus.ACTIVE:
+        return props.theme.colors.primary;
+      default:
+        return props.theme.colors.background.light;
+    }
+  }};
     color: ${props => {
-        switch (props.status) {
-            case TaskStatus.IN_PROGRESS:
-            case ProjectStatus.ACTIVE:
-                return 'white';
-            default:
-                return props.theme.colors.text.secondary;
-        }
-    }};
+    switch (props.$status) {
+      case TaskStatus.IN_PROGRESS:
+      case ProjectStatus.ACTIVE:
+        return 'white';
+      default:
+        return props.theme.colors.text.secondary;
+    }
+  }};
   }
 `;
 
 const Actions = styled.div`
   display: flex;
   gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  ${ItemContainer}:hover & {
+    opacity: 1;
+  }
 `;
 
-const ActionButton = styled.button<{ variant?: 'danger' | 'promote' }>`
+const ActionButton = styled.button<{ $variant?: string }>`
   padding: 0.5rem;
-  border-radius: 0.375rem;
+  border: none;
   background: none;
-  border: 1px solid ${props => {
-        if (props.variant === 'danger') return props.theme.colors.error;
-        if (props.variant === 'promote') return '#DDE3FF'; // Softer blue for idle state
-        return props.theme.colors.border;
-    }};
-  color: ${props => {
-        if (props.variant === 'danger') return props.theme.colors.error;
-        if (props.variant === 'promote') return props.theme.colors.primary;
-        return props.theme.colors.text.secondary;
-    }};
+  color: ${props => props.theme.colors.text.secondary};
   cursor: pointer;
+  border-radius: ${props => props.theme.borderRadius.sm};
   transition: all 0.2s ease;
-  box-shadow: ${props => props.theme.shadows.sm};
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
-    background: ${props => {
-        if (props.variant === 'danger') return props.theme.colors.errorLight;
-        if (props.variant === 'promote') return props.theme.colors.primary;
-        return props.theme.colors.background.light;
-    }};
-    color: ${props => {
-        if (props.variant === 'danger' || props.variant === 'promote') return 'white';
-        return props.theme.colors.text.primary;
-    }};
-    transform: translateY(-1px);
-    box-shadow: ${props => props.theme.shadows.md};
-    border-color: ${props => {
-        if (props.variant === 'danger') return props.theme.colors.error;
-        if (props.variant === 'promote') return props.theme.colors.primary;
-        return props.theme.colors.border;
-    }};
+    background: ${props => props.theme.colors.background.light};
+    color: ${props => props.theme.colors.primary};
   }
 
-  &:active {
-    transform: scale(0.95);
-  }
+  ${props => props.$variant === 'delete' && `
+    &:hover {
+      background: ${props.theme.colors.error};
+      color: ${props.theme.colors.background.white};
+    }
+  `}
+
+  ${props => props.$variant === 'promote' && `
+    &:hover {
+      background: ${props.theme.colors.background.light};
+      color: ${props.theme.colors.primary};
+    }
+  `}
 `;
 
-const ToggleButton = styled.button<{ completed?: boolean }>`
+const ToggleButton = styled.button<{ $completed?: boolean }>`
   padding: 0.5rem;
   border-radius: 0.375rem;
   background: none;
   border: 1px solid ${props => props.theme.colors.border};
-  color: ${props => props.completed ? props.theme.colors.success : props.theme.colors.text.secondary};
+  color: ${props => props.$completed ? props.theme.colors.success : props.theme.colors.text.secondary};
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: ${props => props.theme.shadows.sm};
@@ -196,58 +192,67 @@ const ToggleButton = styled.button<{ completed?: boolean }>`
 `;
 
 interface ItemData {
-    id: string;
-    title: string;
-    description?: string;
-    status: TaskStatus | ProjectStatus;
-    actions: Array<{
-        label: string;
-        onClick: () => void;
-    }>;
+  id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus | ProjectStatus;
+  actions: Array<{
+    label: string;
+    onClick: () => void;
+  }>;
 }
 
 interface ItemProps {
-    variant?: 'task' | 'project';
-    data: ItemData;
-    onClick?: () => void;
-    className?: string;
+  $variant?: 'task' | 'project';
+  data: ItemData;
+  onClick?: () => void;
+  className?: string;
 }
 
-export default function Item({ variant = 'task', data, onClick, className }: ItemProps) {
-    const isCompleted = data.status === TaskStatus.COMPLETED || data.status === ProjectStatus.COMPLETED;
+export default function Item({ $variant = 'task', data, onClick, className }: ItemProps) {
+  const isCompleted = data.status === TaskStatus.COMPLETED || data.status === ProjectStatus.COMPLETED;
 
-    return (
-        <ItemContainer completed={isCompleted} onClick={onClick} className={className}>
-            <Content>
-                <Title completed={isCompleted}>
-                    {data.title}
-                </Title>
-                <StatusBadge status={data.status}>
-                    {isCompleted && <CheckCircleIcon size={14} />}
-                    {data.status}
-                </StatusBadge>
-            </Content>
-            <Actions>
-                {data.actions.map((action, index) => (
-                    <ActionButton
-                        key={index}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            action.onClick();
-                        }}
-                        variant={
-                            action.label === 'Delete' ? 'danger' :
-                                action.label === 'Promote to Project' ? 'promote' : undefined
-                        }
-                    >
-                        {action.label === 'Mark Complete' && <CheckCircleIcon size={16} />}
-                        {action.label === 'Edit' && <EditIcon size={16} />}
-                        {action.label === 'Delete' && <DeleteIcon size={16} />}
-                        {action.label === 'Promote to Project' && <FolderIcon size={16} />}
-                        {action.label === 'Add Task' && <EditIcon size={16} />}
-                    </ActionButton>
-                ))}
-            </Actions>
-        </ItemContainer>
-    );
+  return (
+    <ItemContainer
+      $status={data.status}
+      $variant={$variant}
+      onClick={onClick}
+      className={className}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
+      <Content>
+        <ToggleButton $completed={isCompleted}>
+          <CheckCircleIcon size={20} />
+        </ToggleButton>
+        <Title>{data.title}</Title>
+        {data.description && <Description>{data.description}</Description>}
+        <StatusBadge $status={data.status}>
+          {data.status}
+        </StatusBadge>
+      </Content>
+      <Actions>
+        {data.actions.map((action, index) => (
+          <ActionButton
+            key={index}
+            $variant={action.label === 'Delete' ? 'delete' : action.label === 'Promote to Project' ? 'promote' : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick();
+            }}
+          >
+            {action.label === 'Edit' && <EditIcon size={16} />}
+            {action.label === 'Delete' && <DeleteIcon size={16} />}
+            {action.label === 'Promote to Project' && <FolderIcon size={16} />}
+          </ActionButton>
+        ))}
+      </Actions>
+    </ItemContainer>
+  );
 } 

@@ -1,212 +1,128 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Project } from '../types/project';
-import { ProjectStatus, ProjectPriority } from '../types/project';
-import { useListProjects } from '../hooks/useListProjects';
-import { useCreateProject } from '../hooks/useCreateProject';
-import { useEditProject } from '../hooks/useEditProject';
+import { Task } from '../../task/types/task';
+import { useProjects } from '../hooks/useProjects';
+import { useEditProject } from '../edit/useEditProject';
+import { useDeleteProject } from '../delete/useDeleteProject';
+import { useTasks } from '../../task/hooks/useTasks';
+import { useAddTask } from '../../task/hooks/useAddTask';
+import { useEditTask } from '../../task/hooks/useEditTask';
+import { useDeleteTask } from '../../task/hooks/useDeleteTask';
 import { projectService } from '../services/projectService';
+import { taskService } from '../../task/services/taskService';
 import styled from 'styled-components';
-import { PlusIcon } from '../../shared/components/Icons';
-import { CustomTheme } from '../../shared/theme';
 
-const Container = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: ${props => props.theme.colors.text.secondary};
 `;
 
-const SearchBar = styled.div`
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+const ErrorMessage = styled.div`
+  color: ${props => props.theme.colors.error};
+  padding: 1rem;
+  text-align: center;
 `;
 
-const SearchInput = styled.input<{ theme: CustomTheme }>`
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid ${props => props.theme.colors.border};
-    border-radius: ${props => props.theme.borderRadius.md};
-    font-size: 0.875rem;
-    
-    &:focus {
-        outline: none;
-        border-color: ${props => props.theme.colors.primary};
-    }
-`;
-
-const AddProjectContainer = styled.div`
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-`;
-
-const AddProjectInput = styled.input<{ theme: CustomTheme }>`
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid ${props => props.theme.colors.border};
-    border-radius: ${props => props.theme.borderRadius.md};
-    font-size: 0.875rem;
-    
-    &:focus {
-        outline: none;
-        border-color: ${props => props.theme.colors.primary};
-    }
-`;
-
-const AddButton = styled.button<{ theme: CustomTheme }>`
-    padding: 0.5rem 1rem;
-    background-color: ${props => props.theme.colors.primary};
-    color: white;
-    border: none;
-    border-radius: ${props => props.theme.borderRadius.md};
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background-color 0.2s;
-    
-    &:hover {
-        background-color: ${props => props.theme.colors.primaryHover};
-    }
-`;
-
-const LoadingState = styled.div<{ theme: CustomTheme }>`
-    text-align: center;
-    padding: 2rem;
-    color: ${props => props.theme.colors.text.secondary};
-    background: ${props => props.theme.colors.background};
-    border-radius: ${props => props.theme.borderRadius.md};
-    margin: 1rem 0;
-`;
-
-const ErrorMessage = styled.div<{ theme: CustomTheme }>`
-    color: ${props => props.theme.colors.error};
-    padding: 1rem;
-    text-align: center;
-`;
-
-interface ProjectViewWrapperProps {
+interface ProjectViewContainerProps {
     children: (props: {
         projects: Project[];
-        onEditProject: (project: Project) => void;
+        projectTasks: Record<string, Task[]>;
+        onEditProject: (id: string, updates: Partial<Project>) => Promise<Project>;
         onDeleteProject: (id: string) => Promise<void>;
-        onToggleStatus: (id: string) => Promise<void>;
+        onProjectClick: (project: Project) => void;
+        onProjectAdded: () => Promise<void>;
+        onAddTask: (projectId: string, task: Partial<Task>) => Promise<Task>;
+        onEditTask: (taskId: string, updates: Partial<Task>) => Promise<Task>;
+        onDeleteTask: (taskId: string) => Promise<void>;
+        onToggleTaskStatus: (taskId: string) => Promise<void>;
         isLoading: boolean;
+        error: string | null;
     }) => React.ReactNode;
 }
 
-export default function ProjectViewWrapper({ children }: ProjectViewWrapperProps) {
-    const { projects, isLoading, error, loadProjects } = useListProjects();
-    const { createProject } = useCreateProject();
-    const { editProject } = useEditProject();
-    console.log('------- ProjectViewWrapper -------'); // TODO: remove this
-    console.log({ projects });
-    console.log({ isLoading });
-    console.log({ error });
-
-    const [searchQuery, setSearchQuery] = useState('');
-    const [newProjectTitle, setNewProjectTitle] = useState('');
+export default function ProjectViewContainer({ children }: ProjectViewContainerProps) {
+    const { projects, projectTasks, isLoading: isLoadingProjects, error: projectsError, refresh: refreshProjects } = useProjects();
+    const { editProject, isLoading: isEditing, error: editError } = useEditProject();
+    const { deleteProject, isLoading: isDeleting, error: deleteError } = useDeleteProject();
+    const { addTask, isLoading: isAddingTask, error: addTaskError } = useAddTask();
+    const { editTask, isLoading: isEditingTask, error: editTaskError } = useEditTask();
+    const { deleteTask, isLoading: isDeletingTask, error: deleteTaskError } = useDeleteTask();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        loadProjects();
+        refreshProjects();
     }, []);
 
-    const handleToggleStatus = async (id: string): Promise<void> => {
-        try {
-            const project = projects.find(p => p.id === id);
-            if (!project) return;
-
-            const newStatus = project.status === ProjectStatus.ACTIVE
-                ? ProjectStatus.COMPLETED
-                : ProjectStatus.ACTIVE;
-
-            await editProject(id, { status: newStatus });
-            await loadProjects();
-        } catch (err) {
-            console.error('Failed to toggle project status:', err);
-        }
+    const handleEditProject = async (id: string, updates: Partial<Project>): Promise<Project> => {
+        const updatedProject = await editProject(id, updates);
+        await refreshProjects();
+        return updatedProject;
     };
 
     const handleDeleteProject = async (id: string): Promise<void> => {
-        try {
-            await projectService.delete(id);
-            await loadProjects();
-        } catch (err) {
-            console.error('Failed to delete project:', err);
-        }
+        await deleteProject(id);
+        await refreshProjects();
     };
 
-    const handleEditProject = (project: Project) => {
-        // TODO: Implement project editing modal
-        console.log('Edit project:', project);
+    const handleProjectClick = (project: Project) => {
+        navigate(`/projects/${project.id}`);
     };
 
-    const handleAddProject = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newProjectTitle.trim()) return;
+    const handleProjectAdded = useCallback(async () => {
+        await refreshProjects();
+    }, [refreshProjects]);
 
-        try {
-            await createProject({
-                title: newProjectTitle.trim(),
-                priority: ProjectPriority.MEDIUM
-            });
-            setNewProjectTitle('');
-            await loadProjects();
-        } catch (err) {
-            console.error('Failed to create project:', err);
-        }
+    const handleAddTask = async (projectId: string, task: Partial<Task>): Promise<Task> => {
+        const newTask = await addTask(projectId, task);
+        await refreshProjects();
+        return newTask;
     };
 
-    const filteredProjects = useMemo(() => {
-        if (!searchQuery) return projects;
-        return projects.filter(project =>
-            project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            project.description?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [projects, searchQuery]);
+    const handleEditTask = async (taskId: string, updates: Partial<Task>): Promise<Task> => {
+        const updatedTask = await editTask(taskId, updates);
+        await refreshProjects();
+        return updatedTask;
+    };
+
+    const handleDeleteTask = async (taskId: string): Promise<void> => {
+        alert('delete task');
+        await deleteTask(taskId);
+        await refreshProjects();
+    };
+
+    const handleToggleTaskStatus = async (taskId: string): Promise<void> => {
+        const task = Object.values(projectTasks).flat().find(t => t.id === taskId);
+        if (!task) return;
+
+        const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+        await handleEditTask(taskId, { status: newStatus });
+    };
+
+    const isLoading = isLoadingProjects || isEditing || isDeleting || isAddingTask || isEditingTask || isDeletingTask;
+    const error = projectsError || editError || deleteError || addTaskError || editTaskError || deleteTaskError;
+
+    if (isLoading) {
+        return <LoadingState>Loading...</LoadingState>;
+    }
 
     if (error) {
         return <ErrorMessage>{error}</ErrorMessage>;
     }
 
-    return (
-        <Container>
-            <SearchBar>
-                <SearchInput
-                    type="text"
-                    placeholder="Search projects..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-            </SearchBar>
-
-            <form onSubmit={handleAddProject}>
-                <AddProjectContainer>
-                    <AddProjectInput
-                        type="text"
-                        placeholder="Add a new project..."
-                        value={newProjectTitle}
-                        onChange={(e) => setNewProjectTitle(e.target.value)}
-                    />
-                    <AddButton type="submit">
-                        <PlusIcon size={16} />
-                        Add Project
-                    </AddButton>
-                </AddProjectContainer>
-            </form>
-
-            {isLoading && projects.length === 0 ? (
-                <LoadingState>Loading projects...</LoadingState>
-            ) : (
-                children({
-                    projects: filteredProjects,
-                    onEditProject: handleEditProject,
-                    onDeleteProject: handleDeleteProject,
-                    onToggleStatus: handleToggleStatus,
-                    isLoading,
-                })
-            )}
-        </Container>
-    );
+    return children({
+        projects,
+        projectTasks,
+        onEditProject: handleEditProject,
+        onDeleteProject: handleDeleteProject,
+        onProjectClick: handleProjectClick,
+        onProjectAdded: handleProjectAdded,
+        onAddTask: handleAddTask,
+        onEditTask: handleEditTask,
+        onDeleteTask: handleDeleteTask,
+        onToggleTaskStatus: handleToggleTaskStatus,
+        isLoading,
+        error
+    });
 } 
