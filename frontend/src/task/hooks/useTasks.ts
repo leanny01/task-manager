@@ -11,7 +11,7 @@ export function useTasks(projectId?: string) {
     const loadTasks = async () => {
       try {
         setIsLoading(true);
-        const data = await taskService.getAll(projectId);
+        const data = await taskService.getAll();
         setTasks(data);
         setError(null);
       } catch (err) {

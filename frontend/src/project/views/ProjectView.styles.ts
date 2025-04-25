@@ -2,11 +2,11 @@ import styled from "styled-components";
 
 export const Container = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  flex-direction: row;
+  gap: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.5rem;
   min-height: calc(100vh - 4rem);
 
   @media (max-width: ${(props) => props.theme.breakpoints.lg}) {
@@ -20,10 +20,11 @@ export const LeftColumn = styled.div`
   max-width: 400px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 
   @media (max-width: ${(props) => props.theme.breakpoints.lg}) {
     min-width: 100%;
+    max-width: 100%;
   }
 `;
 
@@ -32,7 +33,7 @@ export const RightColumn = styled.div`
   min-width: 600px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 
   @media (max-width: ${(props) => props.theme.breakpoints.lg}) {
     min-width: 100%;
@@ -42,8 +43,9 @@ export const RightColumn = styled.div`
 export const Section = styled.section`
   background: ${(props) => props.theme.colors.background.white};
   border-radius: ${(props) => props.theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: ${(props) => props.theme.shadows.sm};
+  height: fit-content;
 `;
 
 export const SectionHeader = styled.div`
@@ -93,7 +95,6 @@ export const DescriptionInput = styled.textarea`
   font-size: 1rem;
   color: ${(props) => props.theme.colors.text.primary};
   margin: 0.5rem 0;
-  min-height: 100px;
   resize: vertical;
 
   &:focus {
@@ -199,4 +200,49 @@ export const ErrorState = styled.div`
   text-align: center;
   color: ${(props) => props.theme.colors.text.primary};
   padding: 2rem 0;
+`;
+
+export const DescriptionEditContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+`;
+
+export const SaveButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.background.white};
+  border: none;
+  border-radius: ${(props) => props.theme.borderRadius.md};
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${(props) => props.theme.colors.primaryHover};
+  }
+`;
+
+export const CancelButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: ${(props) => props.theme.colors.background.light};
+  color: ${(props) => props.theme.colors.text.secondary};
+  border: 1px solid ${(props) => props.theme.colors.border};
+  border-radius: ${(props) => props.theme.borderRadius.md};
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${(props) => props.theme.colors.background.white};
+    color: ${(props) => props.theme.colors.text.primary};
+  }
 `;

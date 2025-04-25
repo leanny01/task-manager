@@ -60,11 +60,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             startSync();
             await calendarSyncService.syncTasks(tasks);
             syncSuccess(tasks, []);
-            toast.success('Calendar sync completed successfully');
+            //toast.success('Calendar sync completed successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             syncError(errorMessage);
-            toast.error(`Calendar sync failed: ${errorMessage}`);
+            // toast.error(`Calendar sync failed: ${errorMessage}`);
         }
     }, [startSync, syncSuccess, syncError]);
 
@@ -73,11 +73,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             startSync();
             await calendarSyncService.syncProjects(projects);
             syncSuccess([], projects);
-            toast.success('Calendar sync completed successfully');
+            // toast.success('Calendar sync completed successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             syncError(errorMessage);
-            toast.error(`Calendar sync failed: ${errorMessage}`);
+            //toast.error(`Calendar sync failed: ${errorMessage}`);
         }
     }, [startSync, syncSuccess, syncError]);
 
@@ -86,11 +86,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             startSync();
             await calendarSyncService.deleteTaskEvent(task);
             syncSuccess([], []);
-            toast.success('Calendar event deleted successfully');
+            // toast.success('Calendar event deleted successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             syncError(errorMessage);
-            toast.error(`Failed to delete calendar event: ${errorMessage}`);
+            //toast.error(`Failed to delete calendar event: ${errorMessage}`);
         }
     }, [startSync, syncSuccess, syncError]);
 
@@ -99,11 +99,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             startSync();
             await calendarSyncService.deleteProjectEvent(project);
             syncSuccess([], []);
-            toast.success('Calendar event deleted successfully');
+            // toast.success('Calendar event deleted successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             syncError(errorMessage);
-            toast.error(`Failed to delete calendar event: ${errorMessage}`);
+            //toast.error(`Failed to delete calendar event: ${errorMessage}`);
         }
     }, [startSync, syncSuccess, syncError]);
 
@@ -112,11 +112,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             startSync();
             await calendarSyncService.updateTaskEvent(task);
             syncSuccess([task], []);
-            toast.success('Calendar event updated successfully');
+            // toast.success('Calendar event updated successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             syncError(errorMessage);
-            toast.error(`Failed to update calendar event: ${errorMessage}`);
+            //toast.error(`Failed to update calendar event: ${errorMessage}`);
         }
     }, [startSync, syncSuccess, syncError]);
 
@@ -125,11 +125,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             startSync();
             await calendarSyncService.updateProjectEvent(project);
             syncSuccess([], [project]);
-            toast.success('Calendar event updated successfully');
+            // toast.success('Calendar event updated successfully');
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             syncError(errorMessage);
-            toast.error(`Failed to update calendar event: ${errorMessage}`);
+            //toast.error(`Failed to update calendar event: ${errorMessage}`);
         }
     }, [startSync, syncSuccess, syncError]);
 

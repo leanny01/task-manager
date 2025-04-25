@@ -25,11 +25,17 @@ export class ProjectService {
 
   async getById(id: string): Promise<ProjectBase> {
     try {
+      if (!id) {
+        throw new Error("Project ID is required");
+      }
       const projects = projectRepository.getAll();
       const project = projects.find((p) => p.id === id);
+
       if (!project) {
         throw new Error("Project not found");
       }
+      const tasks = await this.getTasksForProject(id);
+      project.tasks = tasks;
       return project;
     } catch (error) {
       throw new Error("Failed to fetch project");
@@ -38,11 +44,11 @@ export class ProjectService {
 
   async getTasksForProject(projectId: string): Promise<Task[]> {
     try {
-      const project = await this.getById(projectId);
-      const allTasks = await taskService.getAll();
-      return project.taskIds
-        .map((taskId) => allTasks.find((task) => task.id === taskId))
-        .filter((task): task is Task => task !== undefined);
+      if (!projectId) {
+        throw new Error("Project ID is required");
+      }
+      const allTasks = await taskService.getTasksByProjectId(projectId);
+      return allTasks;
     } catch (error) {
       throw new Error("Failed to fetch project tasks");
     }
@@ -167,6 +173,7 @@ export class ProjectService {
         priority: this.mapTaskPriorityToProjectPriority(task.priority),
         dueDate: task.toDate,
       });
+      console.log("newProject", newProject);
 
       // If the task is already in a project, remove it from that project first
       if (task.projectId) {

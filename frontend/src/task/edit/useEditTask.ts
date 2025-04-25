@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Task } from "../types/task";
 import { taskService } from "../services/taskService";
 import { useCalendar } from "../../calendar/context/CalendarContext";
-import { toast } from "react-toastify";
 export const useEditTask = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

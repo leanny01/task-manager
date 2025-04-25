@@ -12,6 +12,7 @@ import { useDeleteTask } from '../../task/hooks/useDeleteTask';
 import { projectService } from '../services/projectService';
 import { taskService } from '../../task/services/taskService';
 import styled from 'styled-components';
+import { TaskStatus } from '../../task/types/enums';
 
 const LoadingState = styled.div`
   text-align: center;
@@ -33,7 +34,7 @@ interface ProjectViewContainerProps {
         onDeleteProject: (id: string) => Promise<void>;
         onProjectClick: (project: Project) => void;
         onProjectAdded: () => Promise<void>;
-        onAddTask: (projectId: string, task: Partial<Task>) => Promise<Task>;
+        onAddTask: (task: Task) => Promise<Task>;
         onEditTask: (taskId: string, updates: Partial<Task>) => Promise<Task>;
         onDeleteTask: (taskId: string) => Promise<void>;
         onToggleTaskStatus: (taskId: string) => Promise<void>;
@@ -74,8 +75,8 @@ export default function ProjectViewContainer({ children }: ProjectViewContainerP
         await refreshProjects();
     }, [refreshProjects]);
 
-    const handleAddTask = async (projectId: string, task: Partial<Task>): Promise<Task> => {
-        const newTask = await addTask(projectId, task);
+    const handleAddTask = async (task: Task): Promise<Task> => {
+        const newTask = await addTask(task);
         await refreshProjects();
         return newTask;
     };
@@ -96,7 +97,7 @@ export default function ProjectViewContainer({ children }: ProjectViewContainerP
         const task = Object.values(projectTasks).flat().find(t => t.id === taskId);
         if (!task) return;
 
-        const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+        const newStatus = task.status === TaskStatus.COMPLETED ? TaskStatus.PENDING : TaskStatus.COMPLETED;
         await handleEditTask(taskId, { status: newStatus });
     };
 

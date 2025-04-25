@@ -117,6 +117,10 @@ class TaskService {
   async resetStorage(): Promise<void> {
     taskRepository.save([]);
   }
+  async getTasksByProjectId(projectId: string): Promise<Task[]> {
+    const tasks = await this.getAll();
+    return tasks.filter((task) => task.projectId === projectId);
+  }
 }
 
 export const taskService = new TaskService();

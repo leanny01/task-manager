@@ -54,43 +54,43 @@ const Container = styled.div<{ $isSubmitting?: boolean }>`
 `;
 
 interface AddTaskInputProps {
-    onAddTask: (title: string) => Promise<void>;
-    isSubmitting?: boolean;
+  onAddTask: (title: string) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
 export default function AddTaskInput({ onAddTask, isSubmitting = false }: AddTaskInputProps) {
-    const [title, setTitle] = useState('');
+  const [title, setTitle] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.type === 'keypress' && (e as React.KeyboardEvent).key !== 'Enter') return;
-        e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent | React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.type === 'keypress' && (e as React.KeyboardEvent).key !== 'Enter') return;
+    e.preventDefault();
 
-        if (!title.trim() || isSubmitting) return;
+    if (!title.trim() || isSubmitting) return;
 
-        try {
-            await onAddTask(title.trim());
-            setTitle('');
-        } catch (error) {
-            console.error('Failed to add task:', error);
-        }
-    };
+    try {
+      await onAddTask(title.trim());
+      setTitle('');
+    } catch (error) {
+      console.error('Failed to add task:', error);
+    }
+  };
 
-    return (
-        <Container $isSubmitting={isSubmitting}>
-            <input
-                type="text"
-                placeholder="Add a new task..."
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={handleSubmit}
-                disabled={isSubmitting}
-            />
-            <button
-                onClick={handleSubmit}
-                disabled={isSubmitting || !title.trim()}
-            >
-                {isSubmitting ? 'Adding...' : 'Add Task'}
-            </button>
-        </Container>
-    );
+  return (
+    <Container $isSubmitting={isSubmitting}>
+      <input
+        type="text"
+        placeholder="Add a new task..."
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={handleSubmit}
+        disabled={isSubmitting}
+      />
+      <button
+        onClick={handleSubmit}
+        disabled={isSubmitting || !title.trim()}
+      >
+        {isSubmitting ? 'Adding...' : 'Add Task'}
+      </button>
+    </Container>
+  );
 } 
